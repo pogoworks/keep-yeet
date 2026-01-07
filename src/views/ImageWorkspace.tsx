@@ -6,11 +6,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { MainPreview } from "@/components/browse/MainPreview";
 import { Filmstrip } from "@/components/browse/Filmstrip";
 import { TriageControls } from "@/components/triage/TriageControls";
+import { TriageFeedback } from "@/components/triage/TriageFeedback";
 
 import { useAppStore, useCurrentImage, useTriageProgress } from "@/stores/useAppStore";
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useTriageKeys } from "@/hooks/useTriageKeys";
 import { useEscapeNav } from "@/hooks/useEscapeNav";
+import { useLastClassification } from "@/hooks/useLastClassification";
 import { listImages, getThumbnail } from "@/lib/tauri";
 import type { ImageFile } from "@/stores/useAppStore";
 
@@ -39,6 +41,9 @@ export function ImageWorkspace() {
   useKeyboardNav();
   useTriageKeys();
   useEscapeNav(); // ESC → exit triage (with confirmation if in progress)
+
+  // Track last classification for visual feedback
+  const { lastClassification, classificationCount } = useLastClassification();
 
   // Load images when folder changes
   useEffect(() => {
@@ -187,7 +192,13 @@ export function ImageWorkspace() {
       footer={footer}
       contentScrolls={false}
     >
-      <MainPreview image={currentImage} className="h-full" />
+      <TriageFeedback
+        classificationCount={classificationCount}
+        lastClassification={lastClassification}
+        className="h-full"
+      >
+        <MainPreview image={currentImage} className="h-full" />
+      </TriageFeedback>
     </AppShell>
   );
 }
