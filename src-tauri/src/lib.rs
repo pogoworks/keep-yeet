@@ -439,45 +439,68 @@ async fn get_image_data_url(path: String) -> Result<String, String> {
     Ok(format!("data:{};base64,{}", mime_type, STANDARD.encode(&data)))
 }
 
+/// Helper function to move or copy a file based on output mode
+fn move_or_copy_file(src: &Path, dest: &Path, is_move: bool) -> Result<(), String> {
+    if is_move {
+        fs::rename(src, dest).map_err(|e| format!("Failed to move {}: {}", src.display(), e))
+    } else {
+        fs::copy(src, dest)
+            .map_err(|e| format!("Failed to copy {}: {}", src.display(), e))?;
+        Ok(())
+    }
+}
+
 #[tauri::command]
 async fn execute_triage(
-    session_name: String,
-    source_folder: String,
+    project_path: String,
+    folder_id: String,
+    _source_folder: String, // Kept for API consistency, folder info comes from project config
+    output_mode: String,
     keep_files: Vec<String>,
     maybe_files: Vec<String>,
     yeet_files: Vec<String>,
 ) -> Result<(), String> {
-    let source_path = Path::new(&source_folder);
+    let project_dir = Path::new(&project_path);
 
-    // Create session folders
-    let keep_folder = source_path.join(&session_name).join("keep");
-    let maybe_folder = source_path.join(&session_name).join("maybe");
+    // Read project config to find the folder
+    let project = read_project_config(project_dir)?;
+    let folder = project
+        .folders
+        .iter()
+        .find(|f| f.id == folder_id)
+        .ok_or_else(|| format!("Folder {} not found in project", folder_id))?;
+
+    // Output folder structure: project_path/folder_name/keep|maybe
+    let folder_name = get_folder_name(&folder.source_path);
+    let output_base = project_dir.join(&folder_name);
+    let keep_folder = output_base.join("keep");
+    let maybe_folder = output_base.join("maybe");
 
     fs::create_dir_all(&keep_folder).map_err(|e| format!("Failed to create keep folder: {}", e))?;
     fs::create_dir_all(&maybe_folder)
         .map_err(|e| format!("Failed to create maybe folder: {}", e))?;
 
-    // Move keep files
+    let is_move = output_mode == "move";
+
+    // Process keep files
     for file_path in &keep_files {
         let src = Path::new(file_path);
         if let Some(file_name) = src.file_name() {
             let dest = keep_folder.join(file_name);
-            fs::rename(src, &dest)
-                .map_err(|e| format!("Failed to move {}: {}", file_path, e))?;
+            move_or_copy_file(src, &dest, is_move)?;
         }
     }
 
-    // Move maybe files
+    // Process maybe files
     for file_path in &maybe_files {
         let src = Path::new(file_path);
         if let Some(file_name) = src.file_name() {
             let dest = maybe_folder.join(file_name);
-            fs::rename(src, &dest)
-                .map_err(|e| format!("Failed to move {}: {}", file_path, e))?;
+            move_or_copy_file(src, &dest, is_move)?;
         }
     }
 
-    // Move yeet files to trash
+    // Yeet files always go to trash (regardless of move/copy mode)
     for file_path in &yeet_files {
         trash::delete(file_path)
             .map_err(|e| format!("Failed to trash {}: {}", file_path, e))?;

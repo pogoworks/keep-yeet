@@ -71,15 +71,19 @@ export async function getImageDataUrl(path: string): Promise<string> {
 }
 
 export async function executeTriage(
-  sessionName: string,
+  projectPath: string,
+  folderId: string,
   sourceFolder: string,
+  outputMode: "move" | "copy",
   keepFiles: string[],
   maybeFiles: string[],
   yeetFiles: string[]
 ): Promise<void> {
   return invoke("execute_triage", {
-    sessionName,
+    projectPath,
+    folderId,
     sourceFolder,
+    outputMode,
     keepFiles,
     maybeFiles,
     yeetFiles,

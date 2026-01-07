@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import type {
   Project,
   ProjectSummary,
@@ -200,12 +201,19 @@ export const useAppStore = create<AppState>()(
 
       // Triage
       startTriage: () => {
+        const { images, currentFolder } = get();
+        console.log("[startTriage] Called with:", {
+          imagesCount: images.length,
+          currentFolder: currentFolder?.source_path,
+          firstImage: images[0]?.name,
+        });
         set({
           view: "triage",
           classifications: {},
           triageIndex: 0,
           selectedIndex: 0,
         });
+        console.log("[startTriage] State updated to triage view");
       },
 
       classify: (classification) => {
@@ -265,17 +273,21 @@ export const useCurrentImage = () =>
   useAppStore((state) => state.images[state.selectedIndex]);
 
 export const useTriageProgress = () =>
-  useAppStore((state) => ({
-    current: state.triageIndex + 1,
-    total: state.images.length,
-  }));
+  useAppStore(
+    useShallow((state) => ({
+      current: state.triageIndex + 1,
+      total: state.images.length,
+    }))
+  );
 
 export const useClassifiedImages = () =>
-  useAppStore((state) => {
-    const { images, classifications } = state;
-    return {
-      keep: images.filter((img) => classifications[img.id] === "keep"),
-      maybe: images.filter((img) => classifications[img.id] === "maybe"),
-      yeet: images.filter((img) => classifications[img.id] === "yeet"),
-    };
-  });
+  useAppStore(
+    useShallow((state) => {
+      const { images, classifications } = state;
+      return {
+        keep: images.filter((img) => classifications[img.id] === "keep"),
+        maybe: images.filter((img) => classifications[img.id] === "maybe"),
+        yeet: images.filter((img) => classifications[img.id] === "yeet"),
+      };
+    })
+  );

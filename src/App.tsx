@@ -1,5 +1,10 @@
 import { useAppStore } from "@/stores/useAppStore";
-import { BrowseView, ProjectListView, ProjectDetailView } from "@/views";
+import {
+  BrowseView,
+  ProjectListView,
+  ProjectDetailView,
+  TriageView,
+} from "@/views";
 
 function App() {
   const view = useAppStore((state) => state.view);
@@ -13,11 +18,10 @@ function App() {
     case "browse":
       return <BrowseView />;
     case "triage":
-      // Phase 5: Triage view
-      return <BrowseView />; // Placeholder - uses browse view for now
+      return <TriageView />;
     case "review":
-      // Phase 5: Review view
-      return <BrowseView />; // Placeholder - uses browse view for now
+      // Phase 6: Review view - placeholder for now
+      return <TriageView />;
     default:
       return <ProjectListView />;
   }

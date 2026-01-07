@@ -3,7 +3,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAutoScroll } from "@/hooks/useAutoScroll";
 import { FilmstripItem } from "./FilmstripItem";
-import type { ImageFile } from "@/stores/useAppStore";
+import type { ImageFile, Classification } from "@/stores/useAppStore";
 
 export interface FilmstripProps {
   images: ImageFile[];
@@ -11,6 +11,7 @@ export interface FilmstripProps {
   onSelect: (index: number) => void;
   thumbnailSize?: number;
   className?: string;
+  classifications?: Record<string, Classification>;
 }
 
 export function Filmstrip({
@@ -19,6 +20,7 @@ export function Filmstrip({
   onSelect,
   thumbnailSize = 180,
   className,
+  classifications,
 }: FilmstripProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +59,7 @@ export function Filmstrip({
               isSelected={index === selectedIndex}
               onClick={() => onSelect(index)}
               size={thumbnailSize}
+              classification={classifications?.[image.id]}
             />
           ))}
         </div>
