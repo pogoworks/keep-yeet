@@ -29,8 +29,8 @@ export function TriageControls({ className }: TriageControlsProps) {
       )}
     >
       {/* Progress indicator - left side */}
-      <div className="absolute left-6 flex items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
+      <div className="absolute left-6 flex flex-col gap-1">
+        <span className="text-sm font-medium tabular-nums text-muted-foreground">
           {Math.min(current, total)} / {total}
         </span>
         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
