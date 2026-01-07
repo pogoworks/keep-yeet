@@ -133,3 +133,18 @@ export const Grid = createIcon(
   "M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z",
   "Grid"
 );
+
+export const Clock = createIcon(
+  "M19 3H5v2H3v14h2v2h14v-2h2V5h-2V3zm0 2v14H5V5h14zm-8 2h2v6h4v2h-6V7z",
+  "Clock"
+);
+
+export const Image = createIcon(
+  "M4 3H2v18h20V3H4zm16 2v14H4V5h16zm-6 4h-2v2h-2v2H8v2H6v2h2v-2h2v-2h2v-2h2v2h2v2h2v-2h-2v-2h-2V9zM8 7H6v2h2V7z",
+  "Image"
+);
+
+export const MoreHorizontal = createIcon(
+  "M1 9h6v6H1V9zm2 2v2h2v-2H3zm6-2h6v6H9V9zm2 2v2h2v-2h-2zm6-2h6v6h-6V9zm2 2v2h2v-2h-2z",
+  "MoreHorizontal"
+);

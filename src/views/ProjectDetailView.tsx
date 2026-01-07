@@ -6,8 +6,6 @@ import { AddFolderDialog } from "@/components/AddFolderDialog";
 import { SourceFolderCard } from "@/components/SourceFolderCard";
 import { ProjectStatsBar } from "@/components/ProjectStatsBar";
 import { SubNavigation, type NavTab } from "@/components/SubNavigation";
-import { removeFolderFromProject } from "@/lib/tauri";
-import { ask } from "@tauri-apps/plugin-dialog";
 import { FolderPlus } from "@/components/ui/pixel-icon";
 
 /**
@@ -16,7 +14,6 @@ import { FolderPlus } from "@/components/ui/pixel-icon";
  */
 export function ProjectDetailView() {
   const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
-  const [removingFolderId, setRemovingFolderId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
   const currentProject = useAppStore((state) => state.currentProject);
@@ -45,25 +42,6 @@ export function ProjectDetailView() {
         </div>
       </AppShell>
     );
-  }
-
-  async function handleRemoveFolder(folderId: string) {
-    if (!currentProjectPath) return;
-    const confirmed = await ask(
-      "This will remove the folder from the project but won't delete any files.",
-      { title: "Remove this folder?", kind: "warning" }
-    );
-    if (!confirmed) return;
-
-    try {
-      setRemovingFolderId(folderId);
-      await removeFolderFromProject(currentProjectPath, folderId);
-      await refreshProjectStats();
-    } catch (err) {
-      console.error("Failed to remove folder:", err);
-    } finally {
-      setRemovingFolderId(null);
-    }
   }
 
   async function handleFolderAdded() {
@@ -129,16 +107,16 @@ export function ProjectDetailView() {
           <h2 className="px-1 text-xs font-medium text-muted-foreground">
             Source Folders
           </h2>
-          {currentProject.folders.map((folder) => (
-            <SourceFolderCard
-              key={folder.id}
-              folder={folder}
-              stats={getFolderStats(folder.id)}
-              onClick={() => selectFolder(folder)}
-              onRemove={() => handleRemoveFolder(folder.id)}
-              isRemoving={removingFolderId === folder.id}
-            />
-          ))}
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
+            {currentProject.folders.map((folder) => (
+              <SourceFolderCard
+                key={folder.id}
+                folder={folder}
+                stats={getFolderStats(folder.id)}
+                onClick={() => selectFolder(folder)}
+              />
+            ))}
+          </div>
         </div>
       )}
 
