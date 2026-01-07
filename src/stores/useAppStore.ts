@@ -314,7 +314,7 @@ export const useCurrentImage = () =>
 export const useTriageProgress = () =>
   useAppStore(
     useShallow((state) => ({
-      current: state.triageIndex + 1,
+      current: Object.keys(state.classifications).length,
       total: state.images.length,
     }))
   );
