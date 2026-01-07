@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
 import type { ProjectSummary } from "@/lib/tauri";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
-import { Folder, Plus, Trash } from "@/components/ui/pixel-icon";
+import { ProjectCard } from "@/components/ProjectCard";
+import { Folder, Plus } from "@/components/ui/pixel-icon";
 import { deleteProject } from "@/lib/tauri";
 import { ask } from "@tauri-apps/plugin-dialog";
 
@@ -68,38 +64,6 @@ export function ProjectListView() {
     }
   }
 
-  function formatDate(dateString: string | null) {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-
-  function shortenPath(path: string, segments = 3): string {
-    const parts = path.split(/[/\\]/);
-    if (parts.length <= segments + 1) return path;
-    return "…/" + parts.slice(-segments).join("/");
-  }
-
-  function formatFolders(project: ProjectSummary) {
-    if (project.folder_count === 0) {
-      return <span className="text-muted-foreground/60">No folders</span>;
-    }
-    const displayNames = project.folder_names.slice(0, 3);
-    const remaining = project.folder_count - displayNames.length;
-    return (
-      <>
-        {displayNames.join(", ")}
-        {remaining > 0 && (
-          <span className="text-muted-foreground/60"> +{remaining}</span>
-        )}
-      </>
-    );
-  }
-
   return (
     <AppShell
       headerActions={
@@ -131,50 +95,13 @@ export function ProjectListView() {
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((project) => (
-            <div
+            <ProjectCard
               key={project.id}
-              className="group relative cursor-pointer rounded-md border border-border bg-card p-2 transition-colors hover:bg-muted/50"
-              onClick={() => selectProject(project)}
-            >
-              {/* Delete button - top right */}
-              <button
-                className="absolute right-1.5 top-1.5 rounded p-0.5 text-muted-foreground/50 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                onClick={(e) => handleDeleteProject(e, project)}
-                disabled={deletingId === project.id}
-              >
-                <Trash size={12} />
-              </button>
-              {/* Content */}
-              <div className="space-y-0.5 pr-4">
-                {/* Name */}
-                <div className="font-semibold text-lg leading-tight truncate">
-                  {project.name}
-                </div>
-                {/* Path */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="font-mono text-[10px] text-muted-foreground cursor-default">
-                      {shortenPath(project.path)}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" align="start" sideOffset={4}>
-                    <span className="font-mono">{project.path}</span>
-                  </TooltipContent>
-                </Tooltip>
-                {/* Folders */}
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Folder size={10} className="flex-shrink-0" />
-                  <span className="truncate">{formatFolders(project)}</span>
-                </div>
-                {/* Dates */}
-                <div className="flex gap-2 text-[10px] text-muted-foreground/70">
-                  <span>Created {formatDate(project.created_at)}</span>
-                  {project.updated_at && formatDate(project.updated_at) !== formatDate(project.created_at) && (
-                    <span>· Updated {formatDate(project.updated_at)}</span>
-                  )}
-                </div>
-              </div>
-            </div>
+              project={project}
+              onSelect={selectProject}
+              onDelete={handleDeleteProject}
+              isDeleting={deletingId === project.id}
+            />
           ))}
         </div>
       )}

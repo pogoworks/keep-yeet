@@ -93,7 +93,7 @@ function ShortcutHint({
   return (
     <div className="flex items-center gap-0.5">
       {keys.map((key, i) => (
-        <Kbd key={i} className="h-4 min-w-4 text-[10px]">{key}</Kbd>
+        <Kbd key={i} className="h-4 min-w-4 text-xs">{key}</Kbd>
       ))}
       <span className={cn("ml-0.5", labelClass)}>{label}</span>
     </div>
