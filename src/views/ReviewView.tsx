@@ -9,7 +9,8 @@ import {
   closestCenter,
 } from "@dnd-kit/core";
 
-import { ReviewHeader } from "@/components/review/ReviewHeader";
+import { AppShell } from "@/components/layout/AppShell";
+import { ReviewHeaderActions } from "@/components/review/ReviewHeader";
 import { ReviewGrid } from "@/components/review/ReviewGrid";
 import { Button } from "@/components/ui/button";
 import { Check, Trash, Undo } from "@/components/ui/pixel-icon";
@@ -36,7 +37,6 @@ export function ReviewView() {
 
   // Store state
   const currentFolder = useAppStore((state) => state.currentFolder);
-  const currentProject = useAppStore((state) => state.currentProject);
   const currentProjectPath = useAppStore((state) => state.currentProjectPath);
   const classifications = useAppStore((state) => state.classifications);
   const classificationOrder = useAppStore((state) => state.classificationOrder);
@@ -44,7 +44,6 @@ export function ReviewView() {
 
   // Store actions
   const reclassify = useAppStore((state) => state.reclassify);
-  const setView = useAppStore((state) => state.setView);
   const clearFolder = useAppStore((state) => state.clearFolder);
   const refreshProjectStats = useAppStore((state) => state.refreshProjectStats);
 
@@ -115,11 +114,6 @@ export function ReviewView() {
     setFocusedImageId(imageId);
   }
 
-  function handleBack() {
-    // Return to triage mode (classifications preserved)
-    setView("triage");
-  }
-
   async function handleAccept() {
     if (!currentFolder || !currentProjectPath) {
       console.error("Missing folder or project path");
@@ -158,11 +152,6 @@ export function ReviewView() {
     clearFolder();
   }
 
-  // Extract folder name for title
-  function getFolderName(path: string): string {
-    return path.split(/[/\\]/).pop() || path;
-  }
-
   // Calculate stats
   const stats = {
     keep: classifiedImages.keep.length,
@@ -173,9 +162,11 @@ export function ReviewView() {
   // Error states
   if (!currentFolder) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">No folder selected</p>
-      </div>
+      <AppShell>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm text-muted-foreground">No folder selected</p>
+        </div>
+      </AppShell>
     );
   }
 
@@ -183,52 +174,54 @@ export function ReviewView() {
   if (triageResult) {
     const total = triageResult.keep + triageResult.maybe + triageResult.yeet;
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-8 bg-background">
-        <div className="mesh-complete absolute inset-0 opacity-30" />
+      <AppShell>
+        <div className="relative flex h-full flex-col items-center justify-center gap-6">
+          <div className="mesh-complete absolute inset-0 opacity-30" />
 
-        <div className="relative z-10 flex flex-col items-center gap-6">
-          <div className="flex size-16 items-center justify-center rounded-full bg-keep/20">
-            <Check className="size-8 text-keep" />
-          </div>
-
-          <div className="text-center">
-            <h1 className="text-3xl font-bold">Triage Complete</h1>
-            <p className="mt-2 text-muted-foreground">
-              {total} images sorted successfully
-            </p>
-          </div>
-
-          <div className="flex gap-6">
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2 text-keep">
-                <Check className="size-4" />
-                <span className="text-2xl font-bold tabular-nums">{triageResult.keep}</span>
-              </div>
-              <span className="text-xs text-muted-foreground">Kept</span>
+          <div className="relative z-10 flex flex-col items-center gap-5">
+            <div className="flex size-14 items-center justify-center rounded-full bg-keep/20">
+              <Check className="size-7 text-keep" />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2 text-maybe">
-                <Undo className="size-4" />
-                <span className="text-2xl font-bold tabular-nums">{triageResult.maybe}</span>
-              </div>
-              <span className="text-xs text-muted-foreground">Maybe</span>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold">Triage Complete</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {total} images sorted
+              </p>
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2 text-yeet">
-                <Trash className="size-4" />
-                <span className="text-2xl font-bold tabular-nums">{triageResult.yeet}</span>
+            <div className="flex gap-5">
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1.5 text-keep">
+                  <Check className="size-4" />
+                  <span className="text-xl font-bold tabular-nums">{triageResult.keep}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Kept</span>
               </div>
-              <span className="text-xs text-muted-foreground">Yeeted</span>
+
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1.5 text-maybe">
+                  <Undo className="size-4" />
+                  <span className="text-xl font-bold tabular-nums">{triageResult.maybe}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Maybe</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1.5 text-yeet">
+                  <Trash className="size-4" />
+                  <span className="text-xl font-bold tabular-nums">{triageResult.yeet}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Yeeted</span>
+              </div>
             </div>
+
+            <Button onClick={handleFinish} variant="keep" size="sm" className="mt-2">
+              Done
+            </Button>
           </div>
-
-          <Button onClick={handleFinish} variant="keep" size="lg" className="mt-4">
-            Done
-          </Button>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
@@ -239,16 +232,16 @@ export function ReviewView() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div data-slot="review-view" className="flex h-screen flex-col bg-background">
-        <ReviewHeader
-          title={`Review: ${getFolderName(currentFolder.source_path)}`}
-          subtitle={currentProject?.name}
-          stats={stats}
-          onBack={handleBack}
-          onAccept={handleAccept}
-          isAccepting={isAccepting}
-        />
-
+      <AppShell
+        headerActions={
+          <ReviewHeaderActions
+            stats={stats}
+            onAccept={handleAccept}
+            isAccepting={isAccepting}
+          />
+        }
+        contentScrolls={false}
+      >
         <ReviewGrid
           classifiedImages={classifiedImages}
           selectedImageIds={selectedImageIds}
@@ -260,8 +253,8 @@ export function ReviewView() {
         {/* Drag overlay - shows the dragged item */}
         <DragOverlay>
           {activeImage ? (
-            <div className="flex w-48 items-center gap-2 rounded-md border border-primary bg-card px-2 py-1.5 opacity-95 shadow-lg">
-              <div className="size-8 flex-shrink-0 overflow-hidden rounded bg-muted">
+            <div className="flex w-40 items-center gap-2 rounded-md border border-primary bg-card px-2 py-1.5 opacity-95 shadow-lg">
+              <div className="size-7 flex-shrink-0 overflow-hidden rounded bg-muted">
                 {activeImage.thumbnailUrl ? (
                   <img
                     src={activeImage.thumbnailUrl}
@@ -278,7 +271,7 @@ export function ReviewView() {
             </div>
           ) : null}
         </DragOverlay>
-      </div>
+      </AppShell>
     </DndContext>
   );
 }
