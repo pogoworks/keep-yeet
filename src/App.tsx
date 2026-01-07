@@ -3,6 +3,7 @@ import {
   ProjectListView,
   ProjectDetailView,
   ImageWorkspace,
+  ReviewView,
 } from "@/views";
 
 function App() {
@@ -17,8 +18,9 @@ function App() {
       return <ProjectDetailView />;
     case "browse":
     case "triage":
-    case "review":
       return <ImageWorkspace />;
+    case "review":
+      return <ReviewView />;
     default:
       return <ProjectListView />;
   }

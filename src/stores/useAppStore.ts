@@ -47,6 +47,7 @@ interface AppState {
 
   // Triage state
   classifications: Record<string, Classification>;
+  classificationOrder: { keep: string[]; maybe: string[]; yeet: string[] };
   triageIndex: number;
 
   // Actions - Navigation
@@ -72,7 +73,7 @@ interface AppState {
   // Actions - Triage
   startTriage: () => void;
   classify: (classification: Classification) => void;
-  reclassify: (imageId: string, classification: Classification) => void;
+  reclassify: (imageId: string, classification: Classification, targetIndex?: number) => void;
   finishTriage: () => void;
   resetTriage: () => void;
 
@@ -90,6 +91,7 @@ const initialState = {
   images: [] as ImageFile[],
   selectedIndex: 0,
   classifications: {} as Record<string, Classification>,
+  classificationOrder: { keep: [], maybe: [], yeet: [] } as { keep: string[]; maybe: string[]; yeet: string[] },
   triageIndex: 0,
 };
 
@@ -147,6 +149,7 @@ export const useAppStore = create<AppState>()(
           images: [],
           selectedIndex: 0,
           classifications: {},
+          classificationOrder: { keep: [], maybe: [], yeet: [] },
           triageIndex: 0,
           view: "project-detail",
         });
@@ -210,6 +213,7 @@ export const useAppStore = create<AppState>()(
         set({
           view: "triage",
           classifications: {},
+          classificationOrder: { keep: [], maybe: [], yeet: [] },
           triageIndex: 0,
           selectedIndex: 0,
         });
@@ -217,7 +221,7 @@ export const useAppStore = create<AppState>()(
       },
 
       classify: (classification) => {
-        const { images, triageIndex, classifications } = get();
+        const { images, triageIndex, classifications, classificationOrder } = get();
         const currentImage = images[triageIndex];
         if (!currentImage) return;
 
@@ -226,24 +230,56 @@ export const useAppStore = create<AppState>()(
           [currentImage.id]: classification,
         };
 
+        // Add to classification order (append to end)
+        const newOrder = { ...classificationOrder };
+        newOrder[classification] = [...newOrder[classification], currentImage.id];
+
         const nextIndex = triageIndex + 1;
         const isComplete = nextIndex >= images.length;
 
         set({
           classifications: newClassifications,
+          classificationOrder: newOrder,
+          // Stay on last image when complete, otherwise advance
           triageIndex: isComplete ? triageIndex : nextIndex,
           selectedIndex: isComplete ? triageIndex : nextIndex,
-          view: isComplete ? "review" : "triage",
+          // Never auto-transition - user must click Review button
         });
       },
 
-      reclassify: (imageId, classification) => {
-        const { classifications } = get();
+      reclassify: (imageId, classification, targetIndex) => {
+        const { classifications, classificationOrder } = get();
+        const currentClassification = classifications[imageId];
+
+        // Skip if already in target classification
+        if (currentClassification === classification) return;
+
+        // Update classifications
+        const newClassifications = {
+          ...classifications,
+          [imageId]: classification,
+        };
+
+        // Update order: remove from ALL columns first, then insert into target
+        const newOrder = {
+          keep: classificationOrder.keep.filter((id) => id !== imageId),
+          maybe: classificationOrder.maybe.filter((id) => id !== imageId),
+          yeet: classificationOrder.yeet.filter((id) => id !== imageId),
+        };
+
+        // Add to new classification order at specified index (or end)
+        const insertAt = targetIndex !== undefined
+          ? Math.min(targetIndex, newOrder[classification].length)
+          : newOrder[classification].length;
+        newOrder[classification] = [
+          ...newOrder[classification].slice(0, insertAt),
+          imageId,
+          ...newOrder[classification].slice(insertAt),
+        ];
+
         set({
-          classifications: {
-            ...classifications,
-            [imageId]: classification,
-          },
+          classifications: newClassifications,
+          classificationOrder: newOrder,
         });
       },
 
@@ -255,6 +291,7 @@ export const useAppStore = create<AppState>()(
         set({
           view: "browse",
           classifications: {},
+          classificationOrder: { keep: [], maybe: [], yeet: [] },
           triageIndex: 0,
         });
       },

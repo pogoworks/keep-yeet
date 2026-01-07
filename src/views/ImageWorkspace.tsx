@@ -223,11 +223,13 @@ export function ImageWorkspace() {
                   </span>
                   {isComplete && <CheckCircle size={20} className="text-keep" />}
                 </div>
-                {isComplete && (
-                  <Button onClick={finishTriage} variant="keep">
-                    Review & Finish
-                  </Button>
-                )}
+                <Button
+                  onClick={finishTriage}
+                  variant={isComplete ? "keep" : "outline"}
+                  disabled={Object.keys(classifications).length === 0}
+                >
+                  {isComplete ? "Review & Finish" : "Review"}
+                </Button>
               </motion.div>
             ) : (
               <motion.div
