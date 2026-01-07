@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
@@ -75,6 +77,8 @@ export function ProjectDetailView() {
     );
   }
 
+  const isOverview = activeTab === "overview";
+
   const headerSecondary = (
     <>
       <SubNavigation
@@ -82,18 +86,23 @@ export function ProjectDetailView() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
+      {/* Stats bar collapses - AppShell border-b handles separator */}
       {currentProjectStats && (
-        <div className="border-t">
-          <ProjectStatsBar
-            keepCount={currentProjectStats.total_keep}
-            maybeCount={currentProjectStats.total_maybe}
-          />
+        <div className="overflow-hidden">
+          <motion.div
+            initial={false}
+            animate={{ height: isOverview ? "auto" : 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 35 }}
+          >
+            <ProjectStatsBar
+              keepCount={currentProjectStats.total_keep}
+              maybeCount={currentProjectStats.total_maybe}
+            />
+          </motion.div>
         </div>
       )}
     </>
   );
-
-  const isOverview = activeTab === "overview";
 
   return (
     <AppShell
