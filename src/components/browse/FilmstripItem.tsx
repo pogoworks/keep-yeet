@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { getThumbnail } from "@/lib/tauri";
 import type { ImageFile, Classification } from "@/stores/useAppStore";
-import { Check, HelpCircle, Trash2 } from "lucide-react";
+import { Check, Undo, Trash } from "@/components/ui/pixel-icon";
 
 const filmstripItemVariants = cva(
   "relative flex-shrink-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-300 ease-out",
@@ -66,12 +66,12 @@ const ClassificationBadge = ({
       fg: "text-keep-foreground",
     },
     maybe: {
-      icon: HelpCircle,
+      icon: Undo,
       bg: "bg-maybe",
       fg: "text-maybe-foreground",
     },
     yeet: {
-      icon: Trash2,
+      icon: Trash,
       bg: "bg-yeet",
       fg: "text-yeet-foreground",
     },
@@ -87,7 +87,7 @@ const ClassificationBadge = ({
         fg
       )}
     >
-      <Icon className="size-3.5" strokeWidth={2.5} />
+      <Icon className="size-3.5" />
     </div>
   );
 };

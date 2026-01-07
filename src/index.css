@@ -101,14 +101,17 @@
   --color-keep: var(--keep);
   --color-keep-hover: var(--keep-hover);
   --color-keep-muted: var(--keep-muted);
+  --color-keep-subtle: var(--keep-subtle);
   --color-keep-foreground: var(--keep-foreground);
   --color-maybe: var(--maybe);
   --color-maybe-hover: var(--maybe-hover);
   --color-maybe-muted: var(--maybe-muted);
+  --color-maybe-subtle: var(--maybe-subtle);
   --color-maybe-foreground: var(--maybe-foreground);
   --color-yeet: var(--yeet);
   --color-yeet-hover: var(--yeet-hover);
   --color-yeet-muted: var(--yeet-muted);
+  --color-yeet-subtle: var(--yeet-subtle);
   --color-yeet-foreground: var(--yeet-foreground);
 
   /* Grayscale Mappings */
@@ -174,22 +177,25 @@
   --ring: var(--gray-400);
 
   /* Triage Colors (light mode)
-     KEEP: Electric chartreuse (warm, energetic)
-     MAYBE: Soft violet (cool, contemplative)
-     YEET: Hot coral (warm, decisive) */
-  --keep: oklch(0.72 0.19 128);
-  --keep-hover: oklch(0.68 0.21 128);
-  --keep-muted: oklch(0.94 0.04 128);
-  --keep-foreground: oklch(0.18 0.04 128);
+     KEEP: Lime (fresh, affirming)
+     MAYBE: Cyan (cool, contemplative)
+     YEET: Rose (decisive, final) */
+  --keep: oklch(0.65 0.22 130);
+  --keep-hover: oklch(0.60 0.24 130);
+  --keep-muted: oklch(0.94 0.04 130);
+  --keep-subtle: oklch(0.92 0.08 130);
+  --keep-foreground: oklch(0.25 0.06 130);
 
-  --maybe: oklch(0.62 0.12 280);
-  --maybe-hover: oklch(0.58 0.14 280);
-  --maybe-muted: oklch(0.94 0.03 280);
-  --maybe-foreground: oklch(0.98 0 0);
+  --maybe: oklch(0.70 0.14 195);
+  --maybe-hover: oklch(0.65 0.16 195);
+  --maybe-muted: oklch(0.94 0.04 195);
+  --maybe-subtle: oklch(0.92 0.08 195);
+  --maybe-foreground: oklch(0.20 0.06 195);
 
-  --yeet: oklch(0.62 0.20 18);
-  --yeet-hover: oklch(0.58 0.22 18);
-  --yeet-muted: oklch(0.94 0.05 18);
+  --yeet: oklch(0.62 0.20 10);
+  --yeet-hover: oklch(0.57 0.22 10);
+  --yeet-muted: oklch(0.94 0.04 10);
+  --yeet-subtle: oklch(0.92 0.08 10);
   --yeet-foreground: oklch(0.98 0 0);
 
   /* Shadows (light mode) */
@@ -198,9 +204,9 @@
   --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.1), 0 8px 10px -6px oklch(0 0 0 / 0.1);
-  --glow-keep: 0 0 20px 0 oklch(0.72 0.19 128 / 0.5);
-  --glow-maybe: 0 0 20px 0 oklch(0.62 0.12 280 / 0.5);
-  --glow-yeet: 0 0 20px 0 oklch(0.62 0.20 18 / 0.5);
+  --glow-keep: 0 0 20px 0 oklch(0.65 0.22 130 / 0.5);
+  --glow-maybe: 0 0 20px 0 oklch(0.70 0.14 195 / 0.5);
+  --glow-yeet: 0 0 20px 0 oklch(0.62 0.20 10 / 0.5);
 }
 
 /* ============================================================================
@@ -242,22 +248,25 @@
   --ring: var(--gray-500);
 
   /* Triage Colors (dark mode - electric, high contrast)
-     KEEP: Vibrant chartreuse - the "yes" energy
-     MAYBE: Luminous violet - uncertainty, contemplation
-     YEET: Burning coral - decisive action */
-  --keep: oklch(0.82 0.24 128);
-  --keep-hover: oklch(0.88 0.26 128);
-  --keep-muted: oklch(0.22 0.06 128);
-  --keep-foreground: oklch(0.15 0.05 128);
+     KEEP: Vibrant lime - the "yes" energy
+     MAYBE: Electric cyan - cool, contemplation
+     YEET: Hot rose - decisive action */
+  --keep: oklch(0.78 0.24 130);
+  --keep-hover: oklch(0.84 0.26 130);
+  --keep-muted: oklch(0.22 0.06 130);
+  --keep-subtle: oklch(0.20 0.08 130);
+  --keep-foreground: oklch(0.15 0.05 130);
 
-  --maybe: oklch(0.72 0.16 280);
-  --maybe-hover: oklch(0.78 0.18 280);
-  --maybe-muted: oklch(0.22 0.05 280);
-  --maybe-foreground: oklch(0.15 0 0);
+  --maybe: oklch(0.78 0.14 195);
+  --maybe-hover: oklch(0.84 0.16 195);
+  --maybe-muted: oklch(0.22 0.05 195);
+  --maybe-subtle: oklch(0.20 0.08 195);
+  --maybe-foreground: oklch(0.15 0.06 195);
 
-  --yeet: oklch(0.70 0.22 18);
-  --yeet-hover: oklch(0.76 0.24 18);
-  --yeet-muted: oklch(0.22 0.08 18);
+  --yeet: oklch(0.72 0.22 10);
+  --yeet-hover: oklch(0.78 0.24 10);
+  --yeet-muted: oklch(0.22 0.08 10);
+  --yeet-subtle: oklch(0.20 0.08 10);
   --yeet-foreground: oklch(0.98 0 0);
 
   /* Shadows (dark mode - dramatic with colored ambient) */
@@ -268,9 +277,9 @@
   --shadow-xl: 0 24px 32px -8px oklch(0 0 0 / 0.6), 0 8px 12px -6px oklch(0 0 0 / 0.45);
 
   /* Glows - more dramatic spread and intensity */
-  --glow-keep: 0 0 24px 4px oklch(0.82 0.24 128 / 0.4), 0 0 48px 8px oklch(0.82 0.24 128 / 0.2);
-  --glow-maybe: 0 0 24px 4px oklch(0.72 0.16 280 / 0.4), 0 0 48px 8px oklch(0.72 0.16 280 / 0.2);
-  --glow-yeet: 0 0 24px 4px oklch(0.70 0.22 18 / 0.4), 0 0 48px 8px oklch(0.70 0.22 18 / 0.2);
+  --glow-keep: 0 0 24px 4px oklch(0.78 0.24 130 / 0.4), 0 0 48px 8px oklch(0.78 0.24 130 / 0.2);
+  --glow-maybe: 0 0 24px 4px oklch(0.78 0.14 195 / 0.4), 0 0 48px 8px oklch(0.78 0.14 195 / 0.2);
+  --glow-yeet: 0 0 24px 4px oklch(0.72 0.22 10 / 0.4), 0 0 48px 8px oklch(0.72 0.22 10 / 0.2);
 }
 
 /* ============================================================================

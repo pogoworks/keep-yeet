@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { pickFolder, addFolderToProject } from "@/lib/tauri";
-import { FolderOpen, ArrowRightLeft, Copy } from "lucide-react";
+import { Folder, ArrowsHorizontal, Copy } from "@/components/ui/pixel-icon";
 
 interface AddFolderDialogProps {
   open: boolean;
@@ -112,7 +112,7 @@ export function AddFolderDialog({
                 variant="outline"
                 onClick={handlePickFolder}
               >
-                <FolderOpen className="mr-2 size-4" />
+                <Folder size={16} className="mr-2" />
                 Browse
               </Button>
             </div>
@@ -131,12 +131,13 @@ export function AddFolderDialog({
                     : "border-border hover:bg-muted/50"
                 }`}
               >
-                <ArrowRightLeft
-                  className={`size-6 ${
+                <ArrowsHorizontal
+                  size={24}
+                  className={
                     outputMode === "move"
                       ? "text-primary"
                       : "text-muted-foreground"
-                  }`}
+                  }
                 />
                 <div className="text-center">
                   <p className="font-medium">Move</p>
@@ -155,11 +156,12 @@ export function AddFolderDialog({
                 }`}
               >
                 <Copy
-                  className={`size-6 ${
+                  size={24}
+                  className={
                     outputMode === "copy"
                       ? "text-primary"
                       : "text-muted-foreground"
-                  }`}
+                  }
                 />
                 <div className="text-center">
                   <p className="font-medium">Copy</p>

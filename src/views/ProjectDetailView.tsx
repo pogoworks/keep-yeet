@@ -14,12 +14,12 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import {
   ArrowLeft,
   FolderPlus,
-  Trash2,
+  Trash,
   Images,
-  CheckCircle2,
-  HelpCircle,
+  CheckCircle,
+  Undo,
   ArrowRight,
-} from "lucide-react";
+} from "@/components/ui/pixel-icon";
 
 /**
  * ProjectDetailView - Shows project details with folder list.
@@ -91,7 +91,7 @@ export function ProjectDetailView() {
       {/* Header */}
       <header className="flex items-center gap-4 border-b px-6 py-4">
         <Button variant="ghost" size="icon" onClick={clearProject}>
-          <ArrowLeft className="size-5" />
+          <ArrowLeft size={20} />
         </Button>
         <div className="flex-1">
           <h1 className="text-xl font-bold">{currentProject.name}</h1>
@@ -100,7 +100,7 @@ export function ProjectDetailView() {
           </p>
         </div>
         <Button onClick={() => setIsAddFolderOpen(true)}>
-          <FolderPlus className="mr-2 size-4" />
+          <FolderPlus size={16} className="mr-2" />
           Add Folder
         </Button>
       </header>
@@ -109,12 +109,12 @@ export function ProjectDetailView() {
       {currentProjectStats && (
         <div className="flex gap-6 border-b px-6 py-3 text-sm">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-green-500" />
+            <CheckCircle size={16} className="text-green-500" />
             <span className="font-medium">{currentProjectStats.total_keep}</span>
             <span className="text-muted-foreground">kept</span>
           </div>
           <div className="flex items-center gap-2">
-            <HelpCircle className="size-4 text-yellow-500" />
+            <Undo size={16} className="text-yellow-500" />
             <span className="font-medium">{currentProjectStats.total_maybe}</span>
             <span className="text-muted-foreground">maybe</span>
           </div>
@@ -125,7 +125,7 @@ export function ProjectDetailView() {
       <div className="flex-1 overflow-auto p-6">
         {currentProject.folders.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            <FolderPlus className="size-16 text-muted-foreground/50" />
+            <FolderPlus size={64} className="text-muted-foreground/50" />
             <div className="text-center">
               <h2 className="text-xl font-semibold">No source folders</h2>
               <p className="text-muted-foreground">
@@ -133,7 +133,7 @@ export function ProjectDetailView() {
               </p>
             </div>
             <Button onClick={() => setIsAddFolderOpen(true)}>
-              <FolderPlus className="mr-2 size-4" />
+              <FolderPlus size={16} className="mr-2" />
               Add Your First Folder
             </Button>
           </div>
@@ -180,7 +180,7 @@ export function ProjectDetailView() {
                           }}
                           disabled={removingFolderId === folder.id}
                         >
-                          <Trash2 className="size-4" />
+                          <Trash size={16} />
                         </Button>
                       </div>
                     </div>
@@ -191,7 +191,7 @@ export function ProjectDetailView() {
                         {stats && (
                           <>
                             <div className="flex items-center gap-1.5">
-                              <Images className="size-4 text-muted-foreground" />
+                              <Images size={16} className="text-muted-foreground" />
                               <span>{stats.source_count} to triage</span>
                             </div>
                             {(stats.keep_count > 0 || stats.maybe_count > 0) && (
@@ -208,7 +208,7 @@ export function ProjectDetailView() {
                           </>
                         )}
                       </div>
-                      <ArrowRight className="size-4 text-muted-foreground" />
+                      <ArrowRight size={16} className="text-muted-foreground" />
                     </div>
                   </CardContent>
                 </Card>

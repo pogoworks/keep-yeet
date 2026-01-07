@@ -19,13 +19,13 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        // Triage action variants - bold, distinctive, with signature hover effects
+        // Triage action variants - outline style with subtle tinted backgrounds
         keep:
-          "bg-keep text-keep-foreground font-semibold tracking-wide hover:bg-keep-hover hover:shadow-[var(--glow-keep)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-keep/50 focus-visible:ring-offset-keep-muted",
+          "border-2 border-keep bg-keep-subtle text-keep font-semibold tracking-wide hover:bg-keep hover:text-keep-foreground hover:shadow-[var(--glow-keep)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-keep/50",
         maybe:
-          "bg-maybe text-maybe-foreground font-semibold tracking-wide hover:bg-maybe-hover hover:shadow-[var(--glow-maybe)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-maybe/50 focus-visible:ring-offset-maybe-muted",
+          "border-2 border-maybe bg-maybe-subtle text-maybe font-semibold tracking-wide hover:bg-maybe hover:text-maybe-foreground hover:shadow-[var(--glow-maybe)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-maybe/50",
         yeet:
-          "bg-yeet text-yeet-foreground font-semibold tracking-wide hover:bg-yeet-hover hover:shadow-[var(--glow-yeet)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-yeet/50 focus-visible:ring-offset-yeet-muted",
+          "border-2 border-yeet bg-yeet-subtle text-yeet font-semibold tracking-wide hover:bg-yeet hover:text-yeet-foreground hover:shadow-[var(--glow-yeet)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-yeet/50",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

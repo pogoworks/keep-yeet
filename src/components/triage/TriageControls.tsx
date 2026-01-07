@@ -1,6 +1,6 @@
 import { useAppStore, useTriageProgress } from "@/stores/useAppStore";
 import { Button } from "@/components/ui/button";
-import { Check, HelpCircle, Trash2 } from "lucide-react";
+import { Check, Undo, Trash } from "@/components/ui/pixel-icon";
 import { cn } from "@/lib/utils";
 
 interface TriageControlsProps {
@@ -29,8 +29,8 @@ export function TriageControls({ className }: TriageControlsProps) {
       )}
     >
       {/* Progress indicator - left side */}
-      <div className="absolute left-6 flex items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
+      <div className="absolute left-6 flex flex-col gap-1">
+        <span className="text-sm font-medium tabular-nums text-muted-foreground">
           {Math.min(current, total)} / {total}
         </span>
         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
@@ -45,7 +45,7 @@ export function TriageControls({ className }: TriageControlsProps) {
       <div className="flex items-center gap-3">
         <TriageButton
           variant="keep"
-          icon={<Check className="size-5" />}
+          icon={<Check size={20} />}
           label="Keep"
           shortcut="K"
           onClick={() => classify("keep")}
@@ -53,7 +53,7 @@ export function TriageControls({ className }: TriageControlsProps) {
         />
         <TriageButton
           variant="maybe"
-          icon={<HelpCircle className="size-5" />}
+          icon={<Undo size={20} />}
           label="Maybe"
           shortcut="M"
           onClick={() => classify("maybe")}
@@ -61,7 +61,7 @@ export function TriageControls({ className }: TriageControlsProps) {
         />
         <TriageButton
           variant="yeet"
-          icon={<Trash2 className="size-5" />}
+          icon={<Trash size={20} />}
           label="Yeet"
           shortcut="Y"
           onClick={() => classify("yeet")}

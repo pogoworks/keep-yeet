@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProject, pickOutputLocation } from "@/lib/tauri";
-import { FolderOpen } from "lucide-react";
+import { Folder } from "@/components/ui/pixel-icon";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -130,7 +130,7 @@ export function CreateProjectDialog({
                 size="icon"
                 onClick={handlePickLocation}
               >
-                <FolderOpen className="size-4" />
+                <Folder size={16} />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">

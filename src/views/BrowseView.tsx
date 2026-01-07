@@ -8,7 +8,7 @@ import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { Filmstrip, MainPreview, InfoPanel } from "@/components/browse";
 import { Button } from "@/components/ui/button";
 import { listImages, getThumbnail } from "@/lib/tauri";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Play } from "@/components/ui/pixel-icon";
 
 /**
  * BrowseView - Main view for browsing images in a folder.
@@ -114,7 +114,7 @@ export function BrowseView() {
       {/* Header */}
       <header className="flex items-center gap-4 border-b px-4 py-3">
         <Button variant="ghost" size="icon" onClick={clearFolder}>
-          <ArrowLeft className="size-5" />
+          <ArrowLeft size={20} />
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold truncate">
@@ -132,7 +132,7 @@ export function BrowseView() {
           </span>
           {images.length > 0 && (
             <Button onClick={startTriage} size="sm">
-              <Play className="mr-2 size-4" />
+              <Play size={16} className="mr-2" />
               Start Triage
             </Button>
           )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Play, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Play, CheckCircle } from "@/components/ui/pixel-icon";
 
 import { Button } from "@/components/ui/button";
 import { MainPreview } from "@/components/browse/MainPreview";
@@ -32,17 +32,6 @@ const infoPanelVariants = {
   hidden: {
     width: 0,
     opacity: 0,
-    transition: springTransition,
-  },
-};
-
-const triageControlsVariants = {
-  hidden: {
-    y: "100%",
-    transition: springTransition,
-  },
-  visible: {
-    y: 0,
     transition: springTransition,
   },
 };
@@ -202,7 +191,7 @@ export function ImageWorkspace() {
       {/* Header */}
       <header className="flex items-center gap-4 border-b px-4 py-3">
         <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="size-5" />
+          <ArrowLeft size={20} />
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold">
@@ -232,7 +221,7 @@ export function ImageWorkspace() {
                   <span className="text-sm font-medium tabular-nums">
                     {Math.min(current, total)} / {total}
                   </span>
-                  {isComplete && <CheckCircle2 className="size-5 text-keep" />}
+                  {isComplete && <CheckCircle size={20} className="text-keep" />}
                 </div>
                 {isComplete && (
                   <Button onClick={finishTriage} variant="keep">
@@ -254,7 +243,7 @@ export function ImageWorkspace() {
                 </span>
                 {images.length > 0 && (
                   <Button onClick={startTriage} size="sm">
-                    <Play className="mr-2 size-4" />
+                    <Play size={16} className="mr-2" />
                     Start Triage
                   </Button>
                 )}

@@ -10,7 +10,7 @@ import {
 import { useAppStore } from "@/stores/useAppStore";
 import type { ProjectSummary } from "@/lib/tauri";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
-import { FolderOpen, Plus, Trash2 } from "lucide-react";
+import { Folder, Plus, Trash } from "@/components/ui/pixel-icon";
 import { deleteProject } from "@/lib/tauri";
 import { ask } from "@tauri-apps/plugin-dialog";
 
@@ -87,7 +87,7 @@ export function ProjectListView() {
           </p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 size-4" />
+          <Plus size={16} className="mr-2" />
           New Project
         </Button>
       </header>
@@ -100,7 +100,7 @@ export function ProjectListView() {
           </div>
         ) : projects.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
-            <FolderOpen className="size-16 text-muted-foreground/50" />
+            <Folder size={64} className="text-muted-foreground/50" />
             <div className="text-center">
               <h2 className="text-xl font-semibold">No projects yet</h2>
               <p className="text-muted-foreground">
@@ -108,7 +108,7 @@ export function ProjectListView() {
               </p>
             </div>
             <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="mr-2 size-4" />
+              <Plus size={16} className="mr-2" />
               Create Your First Project
             </Button>
           </div>
@@ -130,7 +130,7 @@ export function ProjectListView() {
                       onClick={(e) => handleDeleteProject(e, project)}
                       disabled={deletingId === project.id}
                     >
-                      <Trash2 className="size-4" />
+                      <Trash size={16} />
                     </Button>
                   </div>
                   <CardDescription className="truncate font-mono text-xs">
