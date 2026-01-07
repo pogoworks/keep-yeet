@@ -4,15 +4,14 @@
    A dark-mode-first design system for rapid image triage.
 
    Aesthetic: Industrial precision meets electric energy
-   - Syne for display, General Sans for UI
+   - Syne for display, Space Grotesk for UI
    - High-contrast triage colors with intentional warmth/coolness
    - Animated mesh gradients with film grain texture
    - OKLCH color space for perceptual uniformity
    ============================================================================ */
 
-/* Typography: Syne (display) + General Sans (body/UI) */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap');
+/* Typography: Syne (display) + Space Grotesk (body/UI) */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -25,7 +24,7 @@
    ============================================================================ */
 @theme inline {
   /* Typography - Dual font system */
-  --font-sans: 'General Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: 'Syne', ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Consolas, 'Courier New', monospace;
 

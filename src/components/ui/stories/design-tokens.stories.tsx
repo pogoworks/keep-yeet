@@ -125,11 +125,11 @@ export const Typography: Story = {
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
-              UI Font - General Sans
+              UI Font - Space Grotesk
             </p>
             <p className="font-sans text-lg">
               Clean and readable for interface elements, buttons, and body text.
-              Pairs well with the boldness of Syne while maintaining clarity.
+              Geometric with a technical feel that pairs well with Syne's boldness.
             </p>
           </div>
         </div>
@@ -176,9 +176,9 @@ export const Typography: Story = {
       <section>
         <h2 className="text-lg font-semibold mb-4">Font Weights</h2>
         <div className="space-y-3">
-          <p className="text-xl font-normal">Normal (400) - General Sans</p>
-          <p className="text-xl font-medium">Medium (500) - General Sans</p>
-          <p className="text-xl font-semibold">Semibold (600) - General Sans</p>
+          <p className="text-xl font-normal">Normal (400) - Space Grotesk</p>
+          <p className="text-xl font-medium">Medium (500) - Space Grotesk</p>
+          <p className="text-xl font-semibold">Semibold (600) - Space Grotesk</p>
           <p className="font-display text-xl font-bold">Bold (700) - Syne</p>
           <p className="font-display text-xl font-extrabold">Extra Bold (800) - Syne</p>
         </div>
