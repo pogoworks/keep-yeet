@@ -6,13 +6,13 @@ import { useAppStore } from "@/stores/useAppStore";
  * Listens for arrow keys and calls navigateNext/navigatePrev from the store.
  */
 export function useKeyboardNav() {
-  const mode = useAppStore((state) => state.mode);
+  const view = useAppStore((state) => state.view);
   const navigateNext = useAppStore((state) => state.navigateNext);
   const navigatePrev = useAppStore((state) => state.navigatePrev);
 
   useEffect(() => {
-    // Only active in browse or triage modes
-    if (mode !== "browse" && mode !== "triage") return;
+    // Only active in browse or triage views
+    if (view !== "browse" && view !== "triage") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
@@ -37,5 +37,5 @@ export function useKeyboardNav() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mode, navigateNext, navigatePrev]);
+  }, [view, navigateNext, navigatePrev]);
 }

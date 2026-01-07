@@ -1,2 +1,3 @@
 export { BrowseView } from "./BrowseView";
-export { LandingView } from "./LandingView";
+export { ProjectListView } from "./ProjectListView";
+export { ProjectDetailView } from "./ProjectDetailView";
