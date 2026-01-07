@@ -35,6 +35,18 @@ pub struct ProjectSummary {
     pub name: String,
     pub path: String,
     pub created_at: String,
+    pub updated_at: Option<String>,
+    pub folder_count: u32,
+    pub folder_names: Vec<String>,
+}
+
+// Internal struct for the projects registry file (without computed fields)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ProjectRegistryEntry {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,7 +113,7 @@ fn get_projects_file_path(app: &tauri::AppHandle) -> PathBuf {
     get_app_data_path(app).join(PROJECTS_FILE)
 }
 
-fn read_projects_registry(app: &tauri::AppHandle) -> Result<Vec<ProjectSummary>, String> {
+fn read_projects_registry(app: &tauri::AppHandle) -> Result<Vec<ProjectRegistryEntry>, String> {
     let path = get_projects_file_path(app);
     if !path.exists() {
         return Ok(Vec::new());
@@ -110,7 +122,7 @@ fn read_projects_registry(app: &tauri::AppHandle) -> Result<Vec<ProjectSummary>,
     serde_json::from_str(&content).map_err(|e| e.to_string())
 }
 
-fn write_projects_registry(app: &tauri::AppHandle, projects: &[ProjectSummary]) -> Result<(), String> {
+fn write_projects_registry(app: &tauri::AppHandle, projects: &[ProjectRegistryEntry]) -> Result<(), String> {
     let path = get_projects_file_path(app);
 
     // Ensure app data directory exists
@@ -120,6 +132,45 @@ fn write_projects_registry(app: &tauri::AppHandle, projects: &[ProjectSummary]) 
 
     let content = serde_json::to_string_pretty(projects).map_err(|e| e.to_string())?;
     fs::write(&path, content).map_err(|e| e.to_string())
+}
+
+/// Enrich a registry entry with folder info from the project config
+fn enrich_project_summary(entry: &ProjectRegistryEntry) -> ProjectSummary {
+    let project_path = Path::new(&entry.path);
+    let config_path = project_path.join("toss-project.json");
+
+    // Try to get updated_at from config file modification time
+    let updated_at = fs::metadata(&config_path)
+        .and_then(|m| m.modified())
+        .ok()
+        .map(|t| {
+            let datetime: chrono::DateTime<Utc> = t.into();
+            datetime.to_rfc3339()
+        });
+
+    // Try to read project config for folder info
+    let (folder_count, folder_names) = read_project_config(project_path)
+        .map(|project| {
+            let count = project.folders.len() as u32;
+            let names: Vec<String> = project
+                .folders
+                .iter()
+                .take(3)
+                .map(|f| get_folder_name(&f.source_path))
+                .collect();
+            (count, names)
+        })
+        .unwrap_or((0, Vec::new()));
+
+    ProjectSummary {
+        id: entry.id.clone(),
+        name: entry.name.clone(),
+        path: entry.path.clone(),
+        created_at: entry.created_at.clone(),
+        updated_at,
+        folder_count,
+        folder_names,
+    }
 }
 
 fn read_project_config(project_path: &Path) -> Result<Project, String> {
@@ -177,7 +228,8 @@ async fn get_app_data_dir(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 async fn list_projects(app: tauri::AppHandle) -> Result<Vec<ProjectSummary>, String> {
-    read_projects_registry(&app)
+    let entries = read_projects_registry(&app)?;
+    Ok(entries.iter().map(enrich_project_summary).collect())
 }
 
 #[tauri::command]
@@ -211,23 +263,23 @@ async fn create_project(
     write_project_config(&project_path, &project)?;
 
     // Add to registry
-    let mut projects = read_projects_registry(&app)?;
-    projects.push(ProjectSummary {
+    let mut entries = read_projects_registry(&app)?;
+    entries.push(ProjectRegistryEntry {
         id,
         name: sanitized_name,
         path: project_path.to_string_lossy().to_string(),
         created_at,
     });
-    write_projects_registry(&app, &projects)?;
+    write_projects_registry(&app, &entries)?;
 
     Ok(project)
 }
 
 #[tauri::command]
 async fn delete_project(app: tauri::AppHandle, project_id: String) -> Result<(), String> {
-    let mut projects = read_projects_registry(&app)?;
-    projects.retain(|p| p.id != project_id);
-    write_projects_registry(&app, &projects)
+    let mut entries = read_projects_registry(&app)?;
+    entries.retain(|e| e.id != project_id);
+    write_projects_registry(&app, &entries)
 }
 
 #[tauri::command]

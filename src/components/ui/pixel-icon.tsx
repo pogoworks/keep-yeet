@@ -49,6 +49,11 @@ export const ArrowRight = createIcon(
   "ArrowRight"
 );
 
+export const ChevronRight = createIcon(
+  "M10 6h2v2h-2V6zm2 2h2v2h-2V8zm2 2h2v2h-2v-2zm0 2v2h-2v-2h2zm-2 2v2h-2v-2h2z",
+  "ChevronRight"
+);
+
 export const ArrowsHorizontal = createIcon(
   "M15 9V7h2v2h-2zm2 6v-2h-4v-2h4V9h2v2h2v2h-2v2h-2zm0 0v2h-2v-2h2zm-6-4v2H7v2H5v-2H3v-2h2V9h2v2h4zm-4 4h2v2H7v-2zm2-8v2H7V7h2z",
   "ArrowsHorizontal"
@@ -101,4 +106,45 @@ export const CheckCircle = createIcon(
 export const InfoBox = createIcon(
   "M3 3h2v18H3V3zm16 0H5v2h14v14H5v2h16V3h-2zm-8 6h2V7h-2v2zm2 8h-2v-6h2v6z",
   "InfoBox"
+);
+
+// Breadcrumb icons
+export const Home = createIcon(
+  "M14 2h-4v2H8v2H6v2H4v2H2v2h2v10h7v-6h2v6h7V12h2v-2h-2V8h-2V6h-2V4h-2V2zm0 2v2h2v2h2v2h2v2h-2v8h-3v-6H9v6H6v-8H4v-2h2V8h2V6h2V4h4z",
+  "Home"
+);
+
+export const Briefcase = createIcon(
+  "M8 4h8v2h6v14H2V6h6V4zm2 2h4V4h-4v2zM4 8v10h16V8H4z",
+  "Briefcase"
+);
+
+export const User = createIcon(
+  "M15 2H9v2H7v6h2v2H7v2H5v2H3v6h18v-6h-2v-2h-2v-2h-2v-2h2V4h-2V2zm0 2v6h-2v2h2v2h2v2h2v4H7v-4h2v-2h2v-2h2v-2H9V4h6z",
+  "User"
+);
+
+export const Eye = createIcon(
+  "M9 5H7v2H5v2H3v2H1v2h2v2h2v2h2v2h6v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5H9zm0 2h6v2h2v2h2v2h-2v2h-2v2H9v-2H7v-2H5v-2h2V9h2V7zm2 2h2v2h2v2h-2v2h-2v-2H9v-2h2V9z",
+  "Eye"
+);
+
+export const Grid = createIcon(
+  "M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z",
+  "Grid"
+);
+
+export const Clock = createIcon(
+  "M19 3H5v2H3v14h2v2h14v-2h2V5h-2V3zm0 2v14H5V5h14zm-8 2h2v6h4v2h-6V7z",
+  "Clock"
+);
+
+export const Image = createIcon(
+  "M4 3H2v18h20V3H4zm16 2v14H4V5h16zm-6 4h-2v2h-2v2H8v2H6v2h2v-2h2v-2h2v-2h2v2h2v2h2v-2h-2v-2h-2V9zM8 7H6v2h2V7z",
+  "Image"
+);
+
+export const MoreHorizontal = createIcon(
+  "M1 9h6v6H1V9zm2 2v2h2v-2H3zm6-2h6v6H9V9zm2 2v2h2v-2h-2zm6-2h6v6h-6V9zm2 2v2h2v-2h-2z",
+  "MoreHorizontal"
 );

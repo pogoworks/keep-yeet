@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Play, CheckCircle } from "@/components/ui/pixel-icon";
+import { Play, CheckCircle } from "@/components/ui/pixel-icon";
 
 import { Button } from "@/components/ui/button";
+import { AppShell } from "@/components/layout/AppShell";
 import { MainPreview } from "@/components/browse/MainPreview";
 import { InfoPanel } from "@/components/browse/InfoPanel";
 import { Filmstrip } from "@/components/browse/Filmstrip";
@@ -25,7 +26,7 @@ const springTransition = {
 
 const infoPanelVariants = {
   visible: {
-    width: 288, // w-72 = 18rem = 288px
+    width: 256, // w-64 = 16rem = 256px (slightly narrower)
     opacity: 1,
     transition: springTransition,
   },
@@ -52,8 +53,6 @@ export function ImageWorkspace() {
   const classifications = useAppStore((state) => state.classifications);
 
   const currentFolder = useAppStore((state) => state.currentFolder);
-  const currentProject = useAppStore((state) => state.currentProject);
-  const clearFolder = useAppStore((state) => state.clearFolder);
   const setImages = useAppStore((state) => state.setImages);
   const updateImageThumbnail = useAppStore((state) => state.updateImageThumbnail);
 
@@ -62,7 +61,6 @@ export function ImageWorkspace() {
 
   // Triage mode state & actions
   const { current, total } = useTriageProgress();
-  const resetTriage = useAppStore((state) => state.resetTriage);
   const finishTriage = useAppStore((state) => state.finishTriage);
   const isComplete = total > 0 && current > total;
 
@@ -130,133 +128,147 @@ export function ImageWorkspace() {
     loadFolderImages();
   }, [currentFolder, setImages, updateImageThumbnail]);
 
-  function getFolderName(path: string): string {
-    return path.split(/[/\\]/).pop() || path;
-  }
-
-  function handleBack() {
-    if (mode === "triage") {
-      resetTriage();
-    } else {
-      clearFolder();
-    }
-  }
-
   // Derived values for animations
   const isTriage = mode === "triage";
-  const thumbnailSize = isTriage ? 80 : 120;
-  const filmstripHeight = thumbnailSize + 32; // thumbnail + padding for scaled selection (scale-105)
+  const thumbnailSize = isTriage ? 72 : 100;
+  const filmstripHeight = thumbnailSize + 24; // thumbnail + padding
 
-  // Empty states
+  // Header actions - animated swap between browse/triage modes
+  const headerActions = (
+    <AnimatePresence mode="wait">
+      {isTriage ? (
+        <motion.div
+          key="triage-header"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.15 }}
+          className="flex items-center gap-3"
+        >
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="font-medium tabular-nums text-muted-foreground">
+              {Math.min(current, total)}/{total}
+            </span>
+            {isComplete && <CheckCircle size={14} className="text-keep" />}
+          </div>
+          <Button
+            onClick={finishTriage}
+            variant={isComplete ? "keep" : "outline"}
+            size="sm"
+            disabled={Object.keys(classifications).length === 0}
+          >
+            {isComplete ? "Review" : "Review"}
+          </Button>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="browse-header"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.15 }}
+          className="flex items-center gap-2"
+        >
+          <span className="text-xs text-muted-foreground">
+            {images.length} images
+          </span>
+          {images.length > 0 && (
+            <Button onClick={startTriage} size="sm">
+              <Play size={14} className="mr-1.5" />
+              Triage
+            </Button>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // Footer - triage controls + filmstrip
+  const footer = (
+    <div className="border-t">
+      {/* Triage controls - slides up from filmstrip */}
+      <AnimatePresence>
+        {isTriage && (
+          <motion.div
+            key="triage-controls"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={springTransition}
+            className="overflow-hidden"
+          >
+            <TriageControls />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Filmstrip */}
+      <motion.div
+        animate={{ height: filmstripHeight }}
+        transition={springTransition}
+        className="overflow-hidden"
+      >
+        <Filmstrip
+          images={images}
+          selectedIndex={selectedIndex}
+          onSelect={selectImage}
+          thumbnailSize={thumbnailSize}
+          classifications={isTriage ? classifications : undefined}
+          className="h-full"
+        />
+      </motion.div>
+    </div>
+  );
+
+  // Empty/loading states
   if (!currentFolder) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">No folder selected</p>
-      </div>
+      <AppShell>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm text-muted-foreground">No folder selected</p>
+        </div>
+      </AppShell>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading images...</p>
-      </div>
+      <AppShell>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm text-muted-foreground">Loading images...</p>
+        </div>
+      </AppShell>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">{error}</p>
-        <Button variant="outline" onClick={handleBack}>
-          Go Back
-        </Button>
-      </div>
+      <AppShell>
+        <div className="flex h-full flex-col items-center justify-center gap-3">
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </AppShell>
     );
   }
 
   if (images.length === 0) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">No images loaded</p>
-        <Button variant="outline" onClick={handleBack}>
-          Go Back
-        </Button>
-      </div>
+      <AppShell>
+        <div className="flex h-full flex-col items-center justify-center gap-3">
+          <p className="text-sm text-muted-foreground">No images loaded</p>
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <div data-slot="image-workspace" className="flex h-screen flex-col">
-      {/* Header */}
-      <header className="flex items-center gap-4 border-b px-4 py-3">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft size={20} />
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-semibold">
-            {isTriage ? "Triage: " : ""}
-            {getFolderName(currentFolder.source_path)}
-          </h1>
-          {currentProject && (
-            <p className="truncate text-xs text-muted-foreground">
-              {currentProject.name}
-            </p>
-          )}
-        </div>
-
-        {/* Right side actions - animated swap */}
-        <div className="flex items-center gap-4">
-          <AnimatePresence mode="wait">
-            {isTriage ? (
-              <motion.div
-                key="triage-header"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-4"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium tabular-nums">
-                    {Math.min(current, total)} / {total}
-                  </span>
-                  {isComplete && <CheckCircle size={20} className="text-keep" />}
-                </div>
-                <Button
-                  onClick={finishTriage}
-                  variant={isComplete ? "keep" : "outline"}
-                  disabled={Object.keys(classifications).length === 0}
-                >
-                  {isComplete ? "Review & Finish" : "Review"}
-                </Button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="browse-header"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-2"
-              >
-                <span className="text-sm text-muted-foreground">
-                  {images.length} images
-                </span>
-                {images.length > 0 && (
-                  <Button onClick={startTriage} size="sm">
-                    <Play size={16} className="mr-2" />
-                    Start Triage
-                  </Button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </header>
-
-      {/* Main content area */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+    <AppShell
+      headerActions={headerActions}
+      footer={footer}
+      contentScrolls={false}
+    >
+      {/* Main content area - preview + optional info panel */}
+      <div className="flex h-full min-h-0 overflow-hidden">
         {/* Main preview - takes remaining space */}
         <MainPreview image={currentImage} className="min-w-0 flex-1" />
 
@@ -269,49 +281,14 @@ export function ImageWorkspace() {
               animate="visible"
               exit="hidden"
               variants={infoPanelVariants}
-              className="flex-shrink-0 overflow-hidden"
+              className="flex-shrink-0 overflow-hidden border-l"
             >
-              <InfoPanel image={currentImage} className="h-full w-72" />
+              <InfoPanel image={currentImage} className="h-full w-64" />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Bottom section - triage controls + filmstrip */}
-      <div className="overflow-hidden">
-        {/* Triage controls - slides up from filmstrip */}
-        <AnimatePresence>
-          {isTriage && (
-            <motion.div
-              key="triage-controls"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={springTransition}
-              className="overflow-hidden"
-            >
-              <TriageControls />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Filmstrip */}
-        <motion.div
-          animate={{ height: filmstripHeight }}
-          transition={springTransition}
-          className="overflow-hidden"
-        >
-          <Filmstrip
-            images={images}
-            selectedIndex={selectedIndex}
-            onSelect={selectImage}
-            thumbnailSize={thumbnailSize}
-            classifications={isTriage ? classifications : undefined}
-            className="h-full"
-          />
-        </motion.div>
-      </div>
-    </div>
+    </AppShell>
   );
 }
 

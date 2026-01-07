@@ -16,6 +16,9 @@ export interface ProjectSummary {
   name: string;
   path: string;
   created_at: string;
+  updated_at: string | null;
+  folder_count: number;
+  folder_names: string[];
 }
 
 export interface Folder {
