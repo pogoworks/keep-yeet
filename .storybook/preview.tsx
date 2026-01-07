@@ -11,19 +11,23 @@ const preview: Preview = {
       },
     },
     backgrounds: {
-      default: 'light',
+      default: 'dark',
       values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#0a0a0a' },
+        { name: 'dark', value: '#141414' },
+        { name: 'light', value: '#fbfbfb' },
       ],
     },
   },
   decorators: [
-    (Story) => (
-      <div className="font-sans">
-        <Story />
-      </div>
-    ),
+    (Story, context) => {
+      // Apply dark class based on background selection
+      const isDark = context.globals.backgrounds?.value !== '#fbfbfb';
+      return (
+        <div className={`font-sans p-4 ${isDark ? 'dark' : ''}`}>
+          <Story />
+        </div>
+      );
+    },
   ],
 };
 

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Check, HelpCircle, Trash2 } from "lucide-react";
 import { Button } from "../button";
 
 const meta: Meta<typeof Button> = {
@@ -11,11 +12,21 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "destructive", "outline", "secondary", "ghost", "link"],
+      options: [
+        "default",
+        "destructive",
+        "outline",
+        "secondary",
+        "ghost",
+        "link",
+        "keep",
+        "maybe",
+        "yeet",
+      ],
     },
     size: {
       control: "select",
-      options: ["default", "sm", "lg", "icon"],
+      options: ["default", "sm", "lg", "icon", "icon-sm", "icon-lg"],
     },
   },
 };
@@ -79,12 +90,80 @@ export const Large: Story = {
   },
 };
 
+// Triage Action Buttons - Using new design system variants
+export const Keep: Story = {
+  args: {
+    children: "KEEP",
+    variant: "keep",
+  },
+};
+
+export const Maybe: Story = {
+  args: {
+    children: "MAYBE",
+    variant: "maybe",
+  },
+};
+
+export const Yeet: Story = {
+  args: {
+    children: "YEET",
+    variant: "yeet",
+  },
+};
+
 export const TriageButtons: Story = {
+  name: "Triage Actions",
   render: () => (
-    <div className="flex gap-4">
-      <Button className="bg-green-600 hover:bg-green-700">KEEP</Button>
-      <Button className="bg-yellow-500 hover:bg-yellow-600 text-black">MAYBE</Button>
-      <Button variant="destructive">YEET</Button>
+    <div className="flex flex-col gap-6">
+      <div className="flex gap-4">
+        <Button variant="keep" size="lg">
+          <Check className="size-5" />
+          KEEP
+        </Button>
+        <Button variant="maybe" size="lg">
+          <HelpCircle className="size-5" />
+          MAYBE
+        </Button>
+        <Button variant="yeet" size="lg">
+          <Trash2 className="size-5" />
+          YEET
+        </Button>
+      </div>
+      <p className="text-sm text-muted-foreground text-center">
+        Hover to see glow effects
+      </p>
+    </div>
+  ),
+};
+
+export const AllVariants: Story = {
+  name: "All Variants",
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Standard Variants
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="default">Default</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="link">Link</Button>
+          <Button variant="destructive">Destructive</Button>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Triage Actions
+        </p>
+        <div className="flex gap-3">
+          <Button variant="keep">KEEP</Button>
+          <Button variant="maybe">MAYBE</Button>
+          <Button variant="yeet">YEET</Button>
+        </div>
+      </div>
     </div>
   ),
 };
