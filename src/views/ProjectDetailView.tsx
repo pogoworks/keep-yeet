@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
 import { AddFolderDialog } from "@/components/AddFolderDialog";
+import { AddFolderCard } from "@/components/AddFolderCard";
 import { SourceFolderCard } from "@/components/SourceFolderCard";
 import { ProjectStatsBar } from "@/components/ProjectStatsBar";
 import { SubNavigation, type NavTab } from "@/components/SubNavigation";
@@ -79,12 +80,6 @@ export function ProjectDetailView() {
 
   return (
     <AppShell
-      headerActions={
-        <Button size="sm" onClick={() => setIsAddFolderOpen(true)}>
-          <FolderPlus size={14} className="mr-1.5" />
-          Add Folder
-        </Button>
-      }
       headerSecondary={headerSecondary}
       contentClassName="p-4"
     >
@@ -116,6 +111,7 @@ export function ProjectDetailView() {
                 onClick={() => selectFolder(folder)}
               />
             ))}
+            <AddFolderCard onClick={() => setIsAddFolderOpen(true)} />
           </div>
         </div>
       )}
