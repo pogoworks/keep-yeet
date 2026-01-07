@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Check, HelpCircle, Trash2 } from "lucide-react";
+import { Check, Undo, Trash } from "../pixel-icon";
 import { Button } from "../button";
 
 const meta: Meta<typeof Button> = {
@@ -118,15 +118,15 @@ export const TriageButtons: Story = {
     <div className="flex flex-col gap-6">
       <div className="flex gap-4">
         <Button variant="keep" size="lg">
-          <Check className="size-5" />
+          <Check size={20} />
           KEEP
         </Button>
         <Button variant="maybe" size="lg">
-          <HelpCircle className="size-5" />
+          <Undo size={20} />
           MAYBE
         </Button>
         <Button variant="yeet" size="lg">
-          <Trash2 className="size-5" />
+          <Trash size={20} />
           YEET
         </Button>
       </div>

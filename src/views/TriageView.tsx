@@ -8,7 +8,7 @@ import { useTriageKeys } from "@/hooks/useTriageKeys";
 import { Filmstrip, MainPreview, InfoPanel } from "@/components/browse";
 import { TriageControls } from "@/components/triage";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle } from "@/components/ui/pixel-icon";
 
 /**
  * TriageView - View for classifying images as KEEP/MAYBE/YEET.
@@ -76,7 +76,7 @@ export function TriageView() {
       {/* Header */}
       <header className="flex items-center gap-4 border-b px-4 py-3">
         <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="size-5" />
+          <ArrowLeft size={20} />
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold">
@@ -94,7 +94,7 @@ export function TriageView() {
             <span className="text-sm font-medium tabular-nums">
               {Math.min(current, total)} / {total}
             </span>
-            {isComplete && <CheckCircle2 className="size-5 text-keep" />}
+            {isComplete && <CheckCircle size={20} className="text-keep" />}
           </div>
           {/* Finish button when all classified */}
           {isComplete && (
