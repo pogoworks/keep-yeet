@@ -72,20 +72,20 @@ export function FolderBrowseView({
       <div data-slot="browse-preview-area" className="relative flex-1 overflow-hidden">
         <MainPreview image={currentImage} className="h-full" />
 
+        {/* Start Triage button - top left */}
+        <div className="absolute top-4 left-4 z-10">
+          <StartTriageButton
+            onClick={onStartTriage}
+            size="lg"
+            className="shadow-lg"
+          />
+        </div>
+
         {/* Glass info panel - top right */}
         <GlassInfoPanel
           image={currentImage}
           className="absolute top-4 right-4 z-10"
         />
-
-        {/* Start Triage button - bottom right, above filmstrip */}
-        <div className="pointer-events-none absolute bottom-4 right-4">
-          <StartTriageButton
-            onClick={onStartTriage}
-            size="lg"
-            className="pointer-events-auto shadow-lg"
-          />
-        </div>
       </div>
 
       {/* Filmstrip */}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
 import { useEscapeNav } from "@/hooks/useEscapeNav";
+import { useTabNavKeys } from "@/hooks/useTabNavKeys";
 import { AddFolderDialog } from "@/components/AddFolderDialog";
 import { AddFolderCard } from "@/components/AddFolderCard";
 import { SourceFolderCard } from "@/components/SourceFolderCard";
@@ -71,6 +72,14 @@ export function ProjectDetailView() {
   useEscapeNav({
     isOverview,
     onEscapeFromFolderTab: handleEscapeFromFolderTab,
+  });
+
+  // Cmd/Ctrl + 1-9 tab navigation, Cmd/Ctrl + Enter to start triage
+  useTabNavKeys({
+    tabs: navTabs,
+    onTabChange: setActiveTab,
+    onStartTriage: handleStartTriage,
+    canStartTriage: !!activeFolder,
   });
 
   if (!currentProject || !currentProjectPath) {

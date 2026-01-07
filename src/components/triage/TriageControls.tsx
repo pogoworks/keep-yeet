@@ -17,8 +17,6 @@ export function TriageControls({ className }: TriageControlsProps) {
   const images = useAppStore((state) => state.images);
   const { current, total } = useTriageProgress();
 
-  console.log("[TriageControls] Render:", { imagesCount: images.length, current, total });
-
   const isComplete = current > total;
 
   return (
@@ -42,30 +40,30 @@ export function TriageControls({ className }: TriageControlsProps) {
         </div>
       </div>
 
-      {/* Triage buttons - centered */}
+      {/* Triage buttons - centered (Yeet left, Keep right like Tinder swipe) */}
       <div className="flex items-center gap-3">
         <TriageButton
-          variant="keep"
-          icon={<Check size={20} />}
-          label="Keep"
-          shortcut="↵"
-          onClick={() => classify("keep")}
+          variant="yeet"
+          icon={<Trash size={20} />}
+          label="Yeet"
+          shortcut="D"
+          onClick={() => classify("yeet")}
           disabled={isComplete || images.length === 0}
         />
         <TriageButton
           variant="maybe"
           icon={<Undo size={20} />}
           label="Maybe"
-          shortcut="⇧↵"
+          shortcut="␣"
           onClick={() => classify("maybe")}
           disabled={isComplete || images.length === 0}
         />
         <TriageButton
-          variant="yeet"
-          icon={<Trash size={20} />}
-          label="Yeet"
-          shortcut="⌫"
-          onClick={() => classify("yeet")}
+          variant="keep"
+          icon={<Check size={20} />}
+          label="Keep"
+          shortcut="K"
+          onClick={() => classify("keep")}
           disabled={isComplete || images.length === 0}
         />
       </div>

@@ -24,22 +24,22 @@ export function useTriageKeys() {
         return;
       }
 
-      // Maybe: Shift + Enter OR Shift + Backspace
-      if (e.shiftKey && (e.key === "Enter" || e.key === "Backspace")) {
-        e.preventDefault();
-        classify("maybe");
-        return;
-      }
-
-      // Keep: Enter (without shift)
-      if (e.key === "Enter" && !e.shiftKey) {
+      // Keep: K
+      if (e.key === "k" || e.key === "K") {
         e.preventDefault();
         classify("keep");
         return;
       }
 
-      // Yeet: Backspace (without shift)
-      if (e.key === "Backspace" && !e.shiftKey) {
+      // Maybe: Space
+      if (e.key === " ") {
+        e.preventDefault();
+        classify("maybe");
+        return;
+      }
+
+      // Yeet: D
+      if (e.key === "d" || e.key === "D") {
         e.preventDefault();
         classify("yeet");
         return;
