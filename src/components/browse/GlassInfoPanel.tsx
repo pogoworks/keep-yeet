@@ -16,10 +16,10 @@ const EXPANDED_WIDTH = 288; // 18rem
 const EXPANDED_HEIGHT = 340;
 
 const transition = {
-  type: "tween" as const,
+  type: "tween",
   duration: 0.35,
-  ease: [0.25, 0.1, 0.25, 1], // cubic-bezier - smooth, no bounce
-};
+  ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
+} as const;
 
 /**
  * GlassInfoPanel - Floating glass panel that morphs from a button.
