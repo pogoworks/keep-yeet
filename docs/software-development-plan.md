@@ -29,12 +29,13 @@
 - [x] Create TypeScript wrappers for Tauri commands
 - [x] Wire up folder picker via `@tauri-apps/plugin-dialog`
 
-### Phase 3: Browse Mode 🔄 IN PROGRESS
-- [ ] Build Filmstrip component (horizontal thumbnails)
-- [ ] Build MainPreview component
-- [ ] Implement keyboard navigation (← / →)
-- [ ] Add image info display
-- [ ] Create stories for each component
+### Phase 3: Browse Mode ✅ COMPLETE
+- [x] Build Filmstrip component (horizontal thumbnails)
+- [x] Build MainPreview component
+- [x] Implement keyboard navigation (← / →)
+- [x] Add image info display (InfoPanel sidebar)
+- [x] Create stories for each component
+- [x] Wire up folder picker and mode routing
 
 ### Phase 4: Triage Mode ⏳ PENDING
 - [ ] Add SessionDialog component (name your session)
