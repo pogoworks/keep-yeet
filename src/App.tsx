@@ -18,7 +18,6 @@ function App() {
         return <ProjectListView />;
       case "project-detail":
         return <ProjectDetailView />;
-      case "browse":
       case "triage":
         return <ImageWorkspace />;
       case "review":

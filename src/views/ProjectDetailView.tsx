@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,17 @@ export function ProjectDetailView() {
   const currentProject = useAppStore((state) => state.currentProject);
   const currentProjectPath = useAppStore((state) => state.currentProjectPath);
   const currentProjectStats = useAppStore((state) => state.currentProjectStats);
+  const currentFolder = useAppStore((state) => state.currentFolder);
   const refreshProjectStats = useAppStore((state) => state.refreshProjectStats);
   const selectFolder = useAppStore((state) => state.selectFolder);
   const startTriage = useAppStore((state) => state.startTriage);
+
+  // Sync activeTab with currentFolder (e.g., when returning from triage)
+  useEffect(() => {
+    if (currentFolder) {
+      setActiveTab(currentFolder.id);
+    }
+  }, [currentFolder]);
 
   // Build navigation tabs from folders
   const navTabs = useMemo((): NavTab[] => {

@@ -17,7 +17,6 @@ export type Classification = "keep" | "maybe" | "yeet";
 export type AppView =
   | "projects"
   | "project-detail"
-  | "browse"
   | "triage"
   | "review";
 
@@ -140,7 +139,7 @@ export const useAppStore = create<AppState>()(
 
       // Folders
       selectFolder: (folder) => {
-        set({ currentFolder: folder, view: "browse" });
+        set({ currentFolder: folder, view: "triage" });
       },
 
       clearFolder: () => {
@@ -288,8 +287,11 @@ export const useAppStore = create<AppState>()(
       },
 
       resetTriage: () => {
+        // Preserve currentFolder so ProjectDetailView can restore the active tab
         set({
-          view: "browse",
+          view: "project-detail",
+          images: [],
+          selectedIndex: 0,
           classifications: {},
           classificationOrder: { keep: [], maybe: [], yeet: [] },
           triageIndex: 0,

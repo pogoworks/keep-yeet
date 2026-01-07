@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle } from "@/components/ui/pixel-icon";
 
 import { Button } from "@/components/ui/button";
-import { StartTriageButton } from "@/components/ui/start-triage-button";
 import { AppShell } from "@/components/layout/AppShell";
 import { MainPreview } from "@/components/browse/MainPreview";
-import { InfoPanel } from "@/components/browse/InfoPanel";
 import { Filmstrip } from "@/components/browse/Filmstrip";
 import { TriageControls } from "@/components/triage/TriageControls";
 
@@ -16,37 +13,12 @@ import { useTriageKeys } from "@/hooks/useTriageKeys";
 import { listImages, getThumbnail } from "@/lib/tauri";
 import type { ImageFile } from "@/stores/useAppStore";
 
-type WorkspaceMode = "browse" | "triage";
-
-// Animation variants
-const springTransition = {
-  type: "spring" as const,
-  stiffness: 400,
-  damping: 35,
-};
-
-const infoPanelVariants = {
-  visible: {
-    width: 256, // w-64 = 16rem = 256px (slightly narrower)
-    opacity: 1,
-    transition: springTransition,
-  },
-  hidden: {
-    width: 0,
-    opacity: 0,
-    transition: springTransition,
-  },
-};
-
 export function ImageWorkspace() {
-  // Read mode from store so component stays mounted across transitions
-  const view = useAppStore((state) => state.view);
-  const mode: WorkspaceMode = view === "triage" || view === "review" ? "triage" : "browse";
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const loadingSessionRef = useRef(0);
 
-  // Shared state
+  // State
   const images = useAppStore((state) => state.images);
   const selectedIndex = useAppStore((state) => state.selectedIndex);
   const selectImage = useAppStore((state) => state.selectImage);
@@ -57,14 +29,13 @@ export function ImageWorkspace() {
   const setImages = useAppStore((state) => state.setImages);
   const updateImageThumbnail = useAppStore((state) => state.updateImageThumbnail);
 
-  // Triage mode state & actions
+  // Triage state & actions
   const { current, total } = useTriageProgress();
   const finishTriage = useAppStore((state) => state.finishTriage);
   const isComplete = total > 0 && current > total;
 
-  // Keyboard navigation (both modes)
+  // Keyboard navigation and triage shortcuts
   useKeyboardNav();
-  // Triage shortcuts (only active in triage mode due to internal checks)
   useTriageKeys();
 
   // Load images when folder changes
@@ -126,90 +97,44 @@ export function ImageWorkspace() {
     loadFolderImages();
   }, [currentFolder, setImages, updateImageThumbnail]);
 
-  // Derived values for animations
-  const isTriage = mode === "triage";
-  const thumbnailSize = isTriage ? 72 : 100;
+  // Layout constants
+  const thumbnailSize = 72;
   const filmstripHeight = thumbnailSize + 24; // thumbnail + padding
 
-  // Header actions - animated swap between browse/triage modes
+  // Header actions
   const headerActions = (
-    <AnimatePresence mode="wait">
-      {isTriage ? (
-        <motion.div
-          key="triage-header"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.15 }}
-          className="flex items-center gap-3"
-        >
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-medium tabular-nums text-muted-foreground">
-              {Math.min(current, total)}/{total}
-            </span>
-            {isComplete && <CheckCircle size={14} className="text-keep" />}
-          </div>
-          <Button
-            onClick={finishTriage}
-            variant={isComplete ? "keep" : "outline"}
-            size="sm"
-            disabled={Object.keys(classifications).length === 0}
-          >
-            {isComplete ? "Review" : "Review"}
-          </Button>
-        </motion.div>
-      ) : (
-        <motion.div
-          key="browse-header"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.15 }}
-          className="flex items-center gap-2"
-        >
-          <span className="text-xs text-muted-foreground">
-            {images.length} images
-          </span>
-          {images.length > 0 && <StartTriageButton label="Triage" />}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 text-xs">
+        <span className="font-medium tabular-nums text-muted-foreground">
+          {Math.min(current, total)}/{total}
+        </span>
+        {isComplete && <CheckCircle size={14} className="text-keep" />}
+      </div>
+      <Button
+        onClick={finishTriage}
+        variant={isComplete ? "keep" : "outline"}
+        size="sm"
+        disabled={Object.keys(classifications).length === 0}
+      >
+        Review
+      </Button>
+    </div>
   );
 
   // Footer - triage controls + filmstrip
   const footer = (
     <div className="border-t">
-      {/* Triage controls - slides up from filmstrip */}
-      <AnimatePresence>
-        {isTriage && (
-          <motion.div
-            key="triage-controls"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={springTransition}
-            className="overflow-hidden"
-          >
-            <TriageControls />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Filmstrip */}
-      <motion.div
-        animate={{ height: filmstripHeight }}
-        transition={springTransition}
-        className="overflow-hidden"
-      >
+      <TriageControls />
+      <div style={{ height: filmstripHeight }} className="overflow-hidden">
         <Filmstrip
           images={images}
           selectedIndex={selectedIndex}
           onSelect={selectImage}
           thumbnailSize={thumbnailSize}
-          classifications={isTriage ? classifications : undefined}
+          classifications={classifications}
           className="h-full"
         />
-      </motion.div>
+      </div>
     </div>
   );
 
@@ -260,27 +185,7 @@ export function ImageWorkspace() {
       footer={footer}
       contentScrolls={false}
     >
-      {/* Main content area - preview + optional info panel */}
-      <div className="flex h-full min-h-0 overflow-hidden">
-        {/* Main preview - takes remaining space */}
-        <MainPreview image={currentImage} className="min-w-0 flex-1" />
-
-        {/* Info panel - animates width to 0 in triage mode */}
-        <AnimatePresence>
-          {!isTriage && (
-            <motion.div
-              key="info-panel"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={infoPanelVariants}
-              className="flex-shrink-0 overflow-hidden border-l"
-            >
-              <InfoPanel image={currentImage} className="h-full w-64" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <MainPreview image={currentImage} className="h-full" />
     </AppShell>
   );
 }
