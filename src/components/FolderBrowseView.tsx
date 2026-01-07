@@ -1,10 +1,6 @@
-import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
-import { Play, InfoBox } from "@/components/ui/pixel-icon";
-import { MainPreview } from "@/components/browse/MainPreview";
-import { Filmstrip } from "@/components/browse/Filmstrip";
-import { FloatingInfoPanel } from "@/components/FloatingInfoPanel";
+import { Play } from "@/components/ui/pixel-icon";
+import { MainPreview, Filmstrip, GlassInfoPanel } from "@/components/browse";
 
 import { useFolderSession } from "@/hooks/useFolderSession";
 import { useLocalKeyboardNav } from "@/hooks/useLocalKeyboardNav";
@@ -27,8 +23,6 @@ export function FolderBrowseView({
   folder,
   onStartTriage,
 }: FolderBrowseViewProps) {
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-
   const {
     images,
     selectedIndex,
@@ -79,26 +73,14 @@ export function FolderBrowseView({
       <div data-slot="browse-preview-area" className="relative flex-1 overflow-hidden">
         <MainPreview image={currentImage} className="h-full" />
 
-        {/* Floating InfoPanel */}
-        <FloatingInfoPanel
+        {/* Glass info panel - top right */}
+        <GlassInfoPanel
           image={currentImage}
-          isOpen={isInfoOpen}
-          onClose={() => setIsInfoOpen(false)}
+          className="absolute top-4 right-4 z-10"
         />
 
-        {/* Action buttons - bottom right, above filmstrip */}
-        <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2">
-          {/* Info toggle button */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsInfoOpen(!isInfoOpen)}
-            className="pointer-events-auto h-10 w-10 shadow-lg"
-          >
-            <InfoBox size={18} />
-          </Button>
-
-          {/* Start Triage button */}
+        {/* Start Triage button - bottom right, above filmstrip */}
+        <div className="pointer-events-none absolute bottom-4 right-4">
           <Button
             onClick={onStartTriage}
             size="lg"
