@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, CheckCircle } from "@/components/ui/pixel-icon";
+import { CheckCircle } from "@/components/ui/pixel-icon";
 
 import { Button } from "@/components/ui/button";
+import { StartTriageButton } from "@/components/ui/start-triage-button";
 import { AppShell } from "@/components/layout/AppShell";
 import { MainPreview } from "@/components/browse/MainPreview";
 import { InfoPanel } from "@/components/browse/InfoPanel";
@@ -55,9 +56,6 @@ export function ImageWorkspace() {
   const currentFolder = useAppStore((state) => state.currentFolder);
   const setImages = useAppStore((state) => state.setImages);
   const updateImageThumbnail = useAppStore((state) => state.updateImageThumbnail);
-
-  // Browse mode actions
-  const startTriage = useAppStore((state) => state.startTriage);
 
   // Triage mode state & actions
   const { current, total } = useTriageProgress();
@@ -172,12 +170,7 @@ export function ImageWorkspace() {
           <span className="text-xs text-muted-foreground">
             {images.length} images
           </span>
-          {images.length > 0 && (
-            <Button onClick={startTriage} size="sm">
-              <Play size={14} className="mr-1.5" />
-              Triage
-            </Button>
-          )}
+          {images.length > 0 && <StartTriageButton label="Triage" />}
         </motion.div>
       )}
     </AnimatePresence>

@@ -7,8 +7,9 @@ import {
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { Filmstrip, MainPreview, InfoPanel } from "@/components/browse";
 import { Button } from "@/components/ui/button";
+import { StartTriageButton } from "@/components/ui/start-triage-button";
 import { listImages, getThumbnail } from "@/lib/tauri";
-import { ArrowLeft, Play } from "@/components/ui/pixel-icon";
+import { ArrowLeft } from "@/components/ui/pixel-icon";
 
 /**
  * BrowseView - Main view for browsing images in a folder.
@@ -31,7 +32,6 @@ export function BrowseView() {
   const updateImageThumbnail = useAppStore(
     (state) => state.updateImageThumbnail
   );
-  const startTriage = useAppStore((state) => state.startTriage);
 
   // Enable keyboard navigation (arrow keys)
   useKeyboardNav();
@@ -130,12 +130,7 @@ export function BrowseView() {
           <span className="text-sm text-muted-foreground">
             {images.length} images
           </span>
-          {images.length > 0 && (
-            <Button onClick={startTriage} size="sm">
-              <Play size={16} className="mr-2" />
-              Start Triage
-            </Button>
-          )}
+          {images.length > 0 && <StartTriageButton />}
         </div>
       </header>
 

@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Play } from "@/components/ui/pixel-icon";
+import { StartTriageButton } from "@/components/ui/start-triage-button";
 import { MainPreview, Filmstrip, GlassInfoPanel } from "@/components/browse";
 
 import { useFolderSession } from "@/hooks/useFolderSession";
@@ -81,14 +80,11 @@ export function FolderBrowseView({
 
         {/* Start Triage button - bottom right, above filmstrip */}
         <div className="pointer-events-none absolute bottom-4 right-4">
-          <Button
+          <StartTriageButton
             onClick={onStartTriage}
             size="lg"
             className="pointer-events-auto shadow-lg"
-          >
-            <Play size={16} className="mr-1.5" />
-            Start Triage
-          </Button>
+          />
         </div>
       </div>
 

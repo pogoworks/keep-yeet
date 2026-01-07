@@ -19,6 +19,9 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Triage start button - amber outline
+        triage:
+          "border border-amber-500 bg-amber-900/30 text-amber-500 hover:bg-amber-800/40 hover:border-amber-400 hover:text-amber-300 focus-visible:ring-amber-500/50",
         // Triage action variants - outline style with subtle tinted backgrounds
         keep:
           "border-2 border-keep bg-keep-subtle text-keep font-semibold tracking-wide hover:bg-keep hover:text-keep-foreground hover:shadow-[var(--glow-keep)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-keep/50",
