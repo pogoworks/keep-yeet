@@ -23,13 +23,18 @@ export function ProjectListView() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const view = useAppStore((state) => state.view);
   const projects = useAppStore((state) => state.projects);
   const loadProjects = useAppStore((state) => state.loadProjects);
   const selectProject = useAppStore((state) => state.selectProject);
 
+  // Reload projects whenever view changes to "projects" (including on mount)
   useEffect(() => {
-    loadProjects().finally(() => setIsLoading(false));
-  }, [loadProjects]);
+    if (view === "projects") {
+      setIsLoading(true);
+      loadProjects().finally(() => setIsLoading(false));
+    }
+  }, [view, loadProjects]);
 
   async function handleDeleteProject(
     e: React.MouseEvent,
