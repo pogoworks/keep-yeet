@@ -97,9 +97,9 @@ The app uses a dark-mode-first design with an "industrial precision meets electr
 **typography**: Dual font system with Syne (display/headings) and Space Grotesk (UI/body)
 
 **color system**: OKLCH color space with semantic colors for each triage action:
-- **keep**: Electric chartreuse — warm, affirming
-- **maybe**: Soft violet — cool, contemplative
-- **yeet**: Hot coral — warm, decisive
+- **keep**: Vibrant lime — fresh, affirming
+- **maybe**: Electric cyan — cool, contemplative
+- **yeet**: Hot rose — decisive, final
 
 **effects**: Glass morphism panels, glow shadows on hover, smooth spring animations, and subtle noise texture overlays.
 
