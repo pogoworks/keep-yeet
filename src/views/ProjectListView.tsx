@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
 import type { ProjectSummary } from "@/lib/tauri";
@@ -70,13 +68,36 @@ export function ProjectListView() {
     }
   }
 
-  function formatDate(dateString: string) {
+  function formatDate(dateString: string | null) {
+    if (!dateString) return null;
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
+  }
+
+  function shortenPath(path: string, segments = 3): string {
+    const parts = path.split(/[/\\]/);
+    if (parts.length <= segments + 1) return path;
+    return "…/" + parts.slice(-segments).join("/");
+  }
+
+  function formatFolders(project: ProjectSummary) {
+    if (project.folder_count === 0) {
+      return <span className="text-muted-foreground/60">No folders</span>;
+    }
+    const displayNames = project.folder_names.slice(0, 3);
+    const remaining = project.folder_count - displayNames.length;
+    return (
+      <>
+        {displayNames.join(", ")}
+        {remaining > 0 && (
+          <span className="text-muted-foreground/60"> +{remaining}</span>
+        )}
+      </>
+    );
   }
 
   return (
@@ -108,38 +129,52 @@ export function ProjectListView() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((project) => (
-            <Card
+            <div
               key={project.id}
-              className="cursor-pointer transition-colors hover:bg-muted/50"
+              className="group relative cursor-pointer rounded-md border border-border bg-card p-2 transition-colors hover:bg-muted/50"
               onClick={() => selectProject(project)}
             >
-              <CardHeader className="p-3 pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-sm font-medium">
-                    {project.name}
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 text-muted-foreground hover:text-destructive"
-                    onClick={(e) => handleDeleteProject(e, project)}
-                    disabled={deletingId === project.id}
-                  >
-                    <Trash size={14} />
-                  </Button>
+              {/* Delete button - top right */}
+              <button
+                className="absolute right-1.5 top-1.5 rounded p-0.5 text-muted-foreground/50 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                onClick={(e) => handleDeleteProject(e, project)}
+                disabled={deletingId === project.id}
+              >
+                <Trash size={12} />
+              </button>
+              {/* Content */}
+              <div className="space-y-0.5 pr-4">
+                {/* Name */}
+                <div className="font-semibold text-lg leading-tight truncate">
+                  {project.name}
                 </div>
-                <CardDescription className="truncate font-mono text-xs">
-                  {project.path}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-3 pb-3 pt-0">
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(project.created_at)}
-                </p>
-              </CardContent>
-            </Card>
+                {/* Path */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="font-mono text-[10px] text-muted-foreground cursor-default">
+                      {shortenPath(project.path)}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start" sideOffset={4}>
+                    <span className="font-mono">{project.path}</span>
+                  </TooltipContent>
+                </Tooltip>
+                {/* Folders */}
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Folder size={10} className="flex-shrink-0" />
+                  <span className="truncate">{formatFolders(project)}</span>
+                </div>
+                {/* Dates */}
+                <div className="flex gap-2 text-[10px] text-muted-foreground/70">
+                  <span>Created {formatDate(project.created_at)}</span>
+                  {project.updated_at && formatDate(project.updated_at) !== formatDate(project.created_at) && (
+                    <span>· Updated {formatDate(project.updated_at)}</span>
+                  )}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
