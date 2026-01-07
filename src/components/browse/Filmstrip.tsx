@@ -3,7 +3,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAutoScroll } from "@/hooks/useAutoScroll";
 import { FilmstripItem } from "./FilmstripItem";
-import type { ImageFile } from "@/stores/useAppStore";
+import type { ImageFile, Classification } from "@/stores/useAppStore";
 
 export interface FilmstripProps {
   images: ImageFile[];
@@ -11,6 +11,7 @@ export interface FilmstripProps {
   onSelect: (index: number) => void;
   thumbnailSize?: number;
   className?: string;
+  classifications?: Record<string, Classification>;
 }
 
 export function Filmstrip({
@@ -19,6 +20,7 @@ export function Filmstrip({
   onSelect,
   thumbnailSize = 180,
   className,
+  classifications,
 }: FilmstripProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,25 +32,29 @@ export function Filmstrip({
       <div
         data-slot="filmstrip"
         className={cn(
-          "flex h-[220px] items-center justify-center border-t bg-muted/30",
+          "flex items-center justify-center border-t bg-muted/30",
           className
         )}
+        style={{ height: thumbnailSize + 32 }}
       >
         <p className="text-muted-foreground">No images in folder</p>
       </div>
     );
   }
 
+  const containerHeight = thumbnailSize + 32; // Room for thumbnails + scale effect
+
   return (
     <div
       data-slot="filmstrip"
       className={cn("border-t bg-muted/30", className)}
+      style={{ height: containerHeight }}
     >
-      <ScrollArea className="w-full">
+      <ScrollArea className="h-full w-full">
         <div
           ref={containerRef}
-          className="flex gap-3 p-4"
-          style={{ height: thumbnailSize + 32 }}
+          className="flex items-center gap-3 px-4 transition-[height] duration-300 ease-out"
+          style={{ height: containerHeight }}
         >
           {images.map((image, index) => (
             <FilmstripItem
@@ -57,6 +63,7 @@ export function Filmstrip({
               isSelected={index === selectedIndex}
               onClick={() => onSelect(index)}
               size={thumbnailSize}
+              classification={classifications?.[image.id]}
             />
           ))}
         </div>

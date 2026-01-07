@@ -2,17 +2,19 @@ import { useEffect } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 
 /**
- * Hook for keyboard navigation in browse/triage modes.
- * Listens for arrow keys and calls navigateNext/navigatePrev from the store.
+ * Hook for triage keyboard shortcuts (K/M/Y keys).
+ * Handles classification actions in triage mode.
  */
-export function useKeyboardNav() {
+export function useTriageKeys() {
   const view = useAppStore((state) => state.view);
-  const navigateNext = useAppStore((state) => state.navigateNext);
-  const navigatePrev = useAppStore((state) => state.navigatePrev);
+  const classify = useAppStore((state) => state.classify);
+
+  console.log("[useTriageKeys] Hook called, view:", view);
 
   useEffect(() => {
-    // Only active in browse or triage views
-    if (view !== "browse" && view !== "triage") return;
+    console.log("[useTriageKeys] useEffect running, view:", view);
+    // Only active in triage view
+    if (view !== "triage") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
@@ -23,19 +25,23 @@ export function useKeyboardNav() {
         return;
       }
 
-      switch (e.key) {
-        case "ArrowRight":
+      switch (e.key.toLowerCase()) {
+        case "k":
           e.preventDefault();
-          navigateNext();
+          classify("keep");
           break;
-        case "ArrowLeft":
+        case "m":
           e.preventDefault();
-          navigatePrev();
+          classify("maybe");
+          break;
+        case "y":
+          e.preventDefault();
+          classify("yeet");
           break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [view, navigateNext, navigatePrev]);
+  }, [view, classify]);
 }

@@ -1,8 +1,25 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
+import type {
+  Project,
+  ProjectSummary,
+  Folder,
+  ProjectStats,
+} from "@/lib/tauri";
+import {
+  listProjects as fetchProjects,
+  getProject as fetchProject,
+  getProjectStats as fetchProjectStats,
+} from "@/lib/tauri";
 
 export type Classification = "keep" | "maybe" | "yeet";
-export type AppMode = "landing" | "browse" | "triage" | "review";
+export type AppView =
+  | "projects"
+  | "project-detail"
+  | "browse"
+  | "triage"
+  | "review";
 
 export interface ImageFile {
   id: string;
@@ -14,45 +31,65 @@ export interface ImageFile {
 }
 
 interface AppState {
-  // Folder state
-  currentFolder: string | null;
-  recentFolders: string[];
+  // Navigation
+  view: AppView;
 
-  // Image state
+  // Project state
+  projects: ProjectSummary[];
+  currentProject: Project | null;
+  currentProjectPath: string | null;
+  currentProjectStats: ProjectStats | null;
+  currentFolder: Folder | null;
+
+  // Image state (for browse/triage)
   images: ImageFile[];
   selectedIndex: number;
 
   // Triage state
-  mode: AppMode;
-  sessionName: string | null;
   classifications: Record<string, Classification>;
   triageIndex: number;
 
-  // Actions
-  setCurrentFolder: (folder: string | null) => void;
-  addRecentFolder: (folder: string) => void;
+  // Actions - Navigation
+  setView: (view: AppView) => void;
+
+  // Actions - Projects
+  loadProjects: () => Promise<void>;
+  selectProject: (projectSummary: ProjectSummary) => Promise<void>;
+  clearProject: () => void;
+  refreshProjectStats: () => Promise<void>;
+
+  // Actions - Folders
+  selectFolder: (folder: Folder) => void;
+  clearFolder: () => void;
+
+  // Actions - Images
   setImages: (images: ImageFile[]) => void;
   updateImageThumbnail: (id: string, thumbnailUrl: string) => void;
   selectImage: (index: number) => void;
   navigateNext: () => void;
   navigatePrev: () => void;
-  setMode: (mode: AppMode) => void;
-  startTriage: (sessionName: string) => void;
+
+  // Actions - Triage
+  startTriage: () => void;
   classify: (classification: Classification) => void;
   reclassify: (imageId: string, classification: Classification) => void;
   finishTriage: () => void;
   resetTriage: () => void;
+
+  // Actions - Reset
   reset: () => void;
 }
 
 const initialState = {
-  currentFolder: null,
-  recentFolders: [],
-  images: [],
+  view: "projects" as AppView,
+  projects: [] as ProjectSummary[],
+  currentProject: null as Project | null,
+  currentProjectPath: null as string | null,
+  currentProjectStats: null as ProjectStats | null,
+  currentFolder: null as Folder | null,
+  images: [] as ImageFile[],
   selectedIndex: 0,
-  mode: "landing" as AppMode,
-  sessionName: null,
-  classifications: {},
+  classifications: {} as Record<string, Classification>,
   triageIndex: 0,
 };
 
@@ -61,14 +98,61 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       ...initialState,
 
-      setCurrentFolder: (folder) => set({ currentFolder: folder }),
+      // Navigation
+      setView: (view) => set({ view }),
 
-      addRecentFolder: (folder) => {
-        const { recentFolders } = get();
-        const filtered = recentFolders.filter((f) => f !== folder);
-        set({ recentFolders: [folder, ...filtered].slice(0, 10) });
+      // Projects
+      loadProjects: async () => {
+        const projects = await fetchProjects();
+        set({ projects });
       },
 
+      selectProject: async (projectSummary) => {
+        const project = await fetchProject(projectSummary.path);
+        const stats = await fetchProjectStats(projectSummary.path);
+        set({
+          currentProject: project,
+          currentProjectPath: projectSummary.path,
+          currentProjectStats: stats,
+          view: "project-detail",
+        });
+      },
+
+      clearProject: () => {
+        set({
+          currentProject: null,
+          currentProjectPath: null,
+          currentProjectStats: null,
+          currentFolder: null,
+          view: "projects",
+        });
+      },
+
+      refreshProjectStats: async () => {
+        const { currentProjectPath } = get();
+        if (!currentProjectPath) return;
+        const project = await fetchProject(currentProjectPath);
+        const stats = await fetchProjectStats(currentProjectPath);
+        set({ currentProject: project, currentProjectStats: stats });
+      },
+
+      // Folders
+      selectFolder: (folder) => {
+        set({ currentFolder: folder, view: "browse" });
+      },
+
+      clearFolder: () => {
+        set({
+          currentFolder: null,
+          images: [],
+          selectedIndex: 0,
+          classifications: {},
+          triageIndex: 0,
+          view: "project-detail",
+        });
+      },
+
+      // Images
       setImages: (images) => set({ images, selectedIndex: 0 }),
 
       updateImageThumbnail: (id, thumbnailUrl) => {
@@ -88,9 +172,8 @@ export const useAppStore = create<AppState>()(
       },
 
       navigateNext: () => {
-        const { selectedIndex, images, mode, triageIndex } = get();
-        if (mode === "triage") {
-          // In triage mode, navigate through unclassified images
+        const { selectedIndex, images, view, triageIndex } = get();
+        if (view === "triage") {
           const nextIndex = triageIndex + 1;
           if (nextIndex < images.length) {
             set({ triageIndex: nextIndex, selectedIndex: nextIndex });
@@ -103,8 +186,8 @@ export const useAppStore = create<AppState>()(
       },
 
       navigatePrev: () => {
-        const { selectedIndex, mode, triageIndex } = get();
-        if (mode === "triage") {
+        const { selectedIndex, view, triageIndex } = get();
+        if (view === "triage") {
           const prevIndex = triageIndex - 1;
           if (prevIndex >= 0) {
             set({ triageIndex: prevIndex, selectedIndex: prevIndex });
@@ -116,16 +199,21 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      setMode: (mode) => set({ mode }),
-
-      startTriage: (sessionName) => {
+      // Triage
+      startTriage: () => {
+        const { images, currentFolder } = get();
+        console.log("[startTriage] Called with:", {
+          imagesCount: images.length,
+          currentFolder: currentFolder?.source_path,
+          firstImage: images[0]?.name,
+        });
         set({
-          mode: "triage",
-          sessionName,
+          view: "triage",
           classifications: {},
           triageIndex: 0,
           selectedIndex: 0,
         });
+        console.log("[startTriage] State updated to triage view");
       },
 
       classify: (classification) => {
@@ -145,7 +233,7 @@ export const useAppStore = create<AppState>()(
           classifications: newClassifications,
           triageIndex: isComplete ? triageIndex : nextIndex,
           selectedIndex: isComplete ? triageIndex : nextIndex,
-          mode: isComplete ? "review" : "triage",
+          view: isComplete ? "review" : "triage",
         });
       },
 
@@ -160,13 +248,12 @@ export const useAppStore = create<AppState>()(
       },
 
       finishTriage: () => {
-        set({ mode: "review" });
+        set({ view: "review" });
       },
 
       resetTriage: () => {
         set({
-          mode: "browse",
-          sessionName: null,
+          view: "browse",
           classifications: {},
           triageIndex: 0,
         });
@@ -176,9 +263,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "toss-storage",
-      partialize: (state) => ({
-        recentFolders: state.recentFolders,
-      }),
+      partialize: () => ({}), // Don't persist anything for now
     }
   )
 );
@@ -188,17 +273,21 @@ export const useCurrentImage = () =>
   useAppStore((state) => state.images[state.selectedIndex]);
 
 export const useTriageProgress = () =>
-  useAppStore((state) => ({
-    current: state.triageIndex + 1,
-    total: state.images.length,
-  }));
+  useAppStore(
+    useShallow((state) => ({
+      current: state.triageIndex + 1,
+      total: state.images.length,
+    }))
+  );
 
 export const useClassifiedImages = () =>
-  useAppStore((state) => {
-    const { images, classifications } = state;
-    return {
-      keep: images.filter((img) => classifications[img.id] === "keep"),
-      maybe: images.filter((img) => classifications[img.id] === "maybe"),
-      yeet: images.filter((img) => classifications[img.id] === "yeet"),
-    };
-  });
+  useAppStore(
+    useShallow((state) => {
+      const { images, classifications } = state;
+      return {
+        keep: images.filter((img) => classifications[img.id] === "keep"),
+        maybe: images.filter((img) => classifications[img.id] === "maybe"),
+        yeet: images.filter((img) => classifications[img.id] === "yeet"),
+      };
+    })
+  );

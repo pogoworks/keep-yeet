@@ -108,7 +108,7 @@ export function MainPreview({ image, className }: MainPreviewProps) {
       <img
         src={imageUrl ?? undefined}
         alt={image.name}
-        className="max-h-full max-w-full object-contain"
+        className="max-h-full max-w-full object-contain transition-[max-width,max-height] duration-300 ease-out"
       />
     </div>
   );

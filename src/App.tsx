@@ -1,22 +1,26 @@
 import { useAppStore } from "@/stores/useAppStore";
-import { BrowseView, LandingView } from "@/views";
+import {
+  ProjectListView,
+  ProjectDetailView,
+  ImageWorkspace,
+} from "@/views";
 
 function App() {
-  const mode = useAppStore((state) => state.mode);
+  const view = useAppStore((state) => state.view);
 
-  // Mode-based routing
-  switch (mode) {
+  // View-based routing
+  // ImageWorkspace handles browse/triage/review internally for smooth animations
+  switch (view) {
+    case "projects":
+      return <ProjectListView />;
+    case "project-detail":
+      return <ProjectDetailView />;
     case "browse":
-      return <BrowseView />;
     case "triage":
-      // Phase 4: Triage view
-      return <BrowseView />; // Placeholder - uses browse view for now
     case "review":
-      // Phase 5: Review view
-      return <BrowseView />; // Placeholder - uses browse view for now
-    case "landing":
+      return <ImageWorkspace />;
     default:
-      return <LandingView />;
+      return <ProjectListView />;
   }
 }
 
