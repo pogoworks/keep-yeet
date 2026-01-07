@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Check, Undo, Trash } from "../pixel-icon";
+import { Kbd } from "../kbd";
 import { Button } from "../button";
 
 const meta: Meta<typeof Button> = {
@@ -119,15 +120,18 @@ export const TriageButtons: Story = {
       <div className="flex gap-4">
         <Button variant="keep" size="lg">
           <Check size={20} />
-          KEEP
+          Keep
+          <Kbd className="ml-1 bg-black/20 text-current">↵</Kbd>
         </Button>
         <Button variant="maybe" size="lg">
           <Undo size={20} />
-          MAYBE
+          Maybe
+          <Kbd className="ml-1 bg-black/20 text-current">⇧↵</Kbd>
         </Button>
         <Button variant="yeet" size="lg">
           <Trash size={20} />
-          YEET
+          Yeet
+          <Kbd className="ml-1 bg-black/20 text-current">⌫</Kbd>
         </Button>
       </div>
       <p className="text-sm text-muted-foreground text-center">
