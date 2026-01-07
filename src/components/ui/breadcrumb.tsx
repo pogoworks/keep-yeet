@@ -2,7 +2,6 @@ import {
   ChevronRight,
   Home,
   Briefcase,
-  Folder,
   User,
   Eye,
 } from "@/components/ui/pixel-icon";
@@ -28,8 +27,8 @@ export function Breadcrumb({ className }: { className?: string }) {
   const currentFolder = useAppStore((state) => state.currentFolder);
   const clearProject = useAppStore((state) => state.clearProject);
   const clearFolder = useAppStore((state) => state.clearFolder);
-  const setView = useAppStore((state) => state.setView);
   const resetTriage = useAppStore((state) => state.resetTriage);
+  const setView = useAppStore((state) => state.setView);
 
   // Build segments based on current state
   const segments: BreadcrumbSegment[] = [];
@@ -47,65 +46,37 @@ export function Breadcrumb({ className }: { className?: string }) {
     segments.push({
       label: currentProject.name.toUpperCase(),
       icon: Briefcase,
-      onClick: view !== "project-detail" ? () => {
-        // If in triage/review, need to reset triage state first
-        if (view === "triage" || view === "review") {
-          resetTriage();
-        }
-        clearFolder();
-      } : undefined,
+      onClick: view !== "project-detail"
+        ? (view === "triage" || view === "review" ? resetTriage : clearFolder)
+        : undefined,
       isActive: view === "project-detail",
     });
   }
 
-  // Folder level (browse/triage/review)
-  if (currentFolder) {
+  // Mode segment (triage/review) - includes folder name
+  if (currentFolder && (view === "triage" || view === "review")) {
     const folderName = currentFolder.source_path.split(/[/\\]/).pop() || "Folder";
 
-    // In browse mode, folder is the active segment
-    if (view === "browse") {
+    if (view === "triage") {
+      // TRIAGE (FolderName) - active segment
       segments.push({
-        label: folderName.toUpperCase(),
-        icon: Folder,
+        label: `TRIAGE (${folderName})`,
+        icon: User,
         isActive: true,
       });
-    } else {
-      // In triage/review, folder is clickable to go back to browse
+    } else if (view === "review") {
+      // TRIAGE (FolderName) - clickable to go back to triage
       segments.push({
-        label: folderName.toUpperCase(),
-        icon: Folder,
-        onClick: () => {
-          if (view === "triage") {
-            resetTriage();
-          } else if (view === "review") {
-            setView("triage");
-            // Then reset from triage
-            setTimeout(() => resetTriage(), 0);
-          }
-        },
+        label: `TRIAGE (${folderName})`,
+        icon: User,
+        onClick: () => setView("triage"),
         isActive: false,
       });
-
-      // Mode segment
-      if (view === "triage") {
-        segments.push({
-          label: "TRIAGE",
-          icon: User,
-          isActive: true,
-        });
-      } else if (view === "review") {
-        segments.push({
-          label: "TRIAGE",
-          icon: User,
-          onClick: () => setView("triage"),
-          isActive: false,
-        });
-        segments.push({
-          label: "REVIEW",
-          icon: Eye,
-          isActive: true,
-        });
-      }
+      segments.push({
+        label: "REVIEW",
+        icon: Eye,
+        isActive: true,
+      });
     }
   }
 

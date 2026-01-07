@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 
 /**
- * Hook for keyboard navigation in browse/triage modes.
+ * Hook for keyboard navigation in triage mode.
  * Listens for arrow keys and calls navigateNext/navigatePrev from the store.
  */
 export function useKeyboardNav() {
@@ -11,8 +11,8 @@ export function useKeyboardNav() {
   const navigatePrev = useAppStore((state) => state.navigatePrev);
 
   useEffect(() => {
-    // Only active in browse or triage views
-    if (view !== "browse" && view !== "triage") return;
+    // Only active in triage view
+    if (view !== "triage") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input

@@ -10,7 +10,7 @@ interface ProjectStatsBarProps {
  */
 export function ProjectStatsBar({ keepCount, maybeCount }: ProjectStatsBarProps) {
   return (
-    <div className="flex gap-4 px-3 py-1 text-xs">
+    <div className="flex gap-4 border-t px-3 py-1 text-xs">
       <div className="flex items-center gap-1.5 px-1.5 py-1">
         <CheckCircle size={14} className="text-keep" />
         <span className="font-medium">{keepCount}</span>
