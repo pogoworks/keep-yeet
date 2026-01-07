@@ -12,6 +12,7 @@ import type { ProjectSummary } from "@/lib/tauri";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 import { deleteProject } from "@/lib/tauri";
+import { ask } from "@tauri-apps/plugin-dialog";
 
 /**
  * ProjectListView - Home screen showing all projects.
@@ -35,7 +36,11 @@ export function ProjectListView() {
     project: ProjectSummary
   ) {
     e.stopPropagation();
-    if (!confirm(`Delete project "${project.name}"? This only removes it from the list, files are not deleted.`)) {
+    const confirmed = await ask(
+      `This only removes it from the list, files are not deleted.`,
+      { title: `Delete project "${project.name}"?`, kind: "warning" }
+    );
+    if (!confirmed) {
       return;
     }
 

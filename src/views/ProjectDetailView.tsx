@@ -10,6 +10,7 @@ import {
 import { useAppStore } from "@/stores/useAppStore";
 import { AddFolderDialog } from "@/components/AddFolderDialog";
 import { removeFolderFromProject } from "@/lib/tauri";
+import { ask } from "@tauri-apps/plugin-dialog";
 import {
   ArrowLeft,
   FolderPlus,
@@ -45,7 +46,11 @@ export function ProjectDetailView() {
 
   async function handleRemoveFolder(folderId: string) {
     if (!currentProjectPath) return;
-    if (!confirm("Remove this folder from the project?")) return;
+    const confirmed = await ask(
+      "This will remove the folder from the project but won't delete any files.",
+      { title: "Remove this folder?", kind: "warning" }
+    );
+    if (!confirmed) return;
 
     try {
       setRemovingFolderId(folderId);
