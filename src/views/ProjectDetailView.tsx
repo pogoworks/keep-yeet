@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
+import { useEscapeNav } from "@/hooks/useEscapeNav";
 import { AddFolderDialog } from "@/components/AddFolderDialog";
 import { AddFolderCard } from "@/components/AddFolderCard";
 import { SourceFolderCard } from "@/components/SourceFolderCard";
@@ -60,6 +61,18 @@ export function ProjectDetailView() {
     startTriage();
   }
 
+  const isOverview = activeTab === "overview";
+
+  // ESC key navigation: overview → projects, folder tab → overview
+  const handleEscapeFromFolderTab = useCallback(() => {
+    setActiveTab("overview");
+  }, []);
+
+  useEscapeNav({
+    isOverview,
+    onEscapeFromFolderTab: handleEscapeFromFolderTab,
+  });
+
   if (!currentProject || !currentProjectPath) {
     return (
       <AppShell>
@@ -84,8 +97,6 @@ export function ProjectDetailView() {
       (s) => s.folder_id === folderId
     );
   }
-
-  const isOverview = activeTab === "overview";
 
   const headerSecondary = (
     <>

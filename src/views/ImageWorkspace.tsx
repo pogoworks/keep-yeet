@@ -10,6 +10,7 @@ import { TriageControls } from "@/components/triage/TriageControls";
 import { useAppStore, useCurrentImage, useTriageProgress } from "@/stores/useAppStore";
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useTriageKeys } from "@/hooks/useTriageKeys";
+import { useEscapeNav } from "@/hooks/useEscapeNav";
 import { listImages, getThumbnail } from "@/lib/tauri";
 import type { ImageFile } from "@/stores/useAppStore";
 
@@ -37,6 +38,7 @@ export function ImageWorkspace() {
   // Keyboard navigation and triage shortcuts
   useKeyboardNav();
   useTriageKeys();
+  useEscapeNav(); // ESC → exit triage (with confirmation if in progress)
 
   // Load images when folder changes
   useEffect(() => {
