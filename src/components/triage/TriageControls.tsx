@@ -1,5 +1,6 @@
 import { useAppStore, useTriageProgress } from "@/stores/useAppStore";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import { Check, Undo, Trash } from "@/components/ui/pixel-icon";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           variant="keep"
           icon={<Check size={20} />}
           label="Keep"
-          shortcut="K"
+          shortcut="↵"
           onClick={() => classify("keep")}
           disabled={isComplete || images.length === 0}
         />
@@ -55,7 +56,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           variant="maybe"
           icon={<Undo size={20} />}
           label="Maybe"
-          shortcut="M"
+          shortcut="⇧↵"
           onClick={() => classify("maybe")}
           disabled={isComplete || images.length === 0}
         />
@@ -63,7 +64,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           variant="yeet"
           icon={<Trash size={20} />}
           label="Yeet"
-          shortcut="Y"
+          shortcut="⌫"
           onClick={() => classify("yeet")}
           disabled={isComplete || images.length === 0}
         />
@@ -104,9 +105,7 @@ function TriageButton({
     >
       {icon}
       <span>{label}</span>
-      <kbd className="ml-1 rounded bg-black/20 px-1.5 py-0.5 text-xs font-mono">
-        {shortcut}
-      </kbd>
+      <Kbd className="ml-1 bg-black/20 text-current">{shortcut}</Kbd>
     </Button>
   );
 }

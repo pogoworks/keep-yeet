@@ -2,17 +2,16 @@ import { useEffect } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 
 /**
- * Hook for triage keyboard shortcuts (K/M/Y keys).
- * Handles classification actions in triage mode.
+ * Hook for triage keyboard shortcuts.
+ * - Enter: Keep
+ * - Backspace: Yeet
+ * - Shift + Enter OR Shift + Backspace: Maybe
  */
 export function useTriageKeys() {
   const view = useAppStore((state) => state.view);
   const classify = useAppStore((state) => state.classify);
 
-  console.log("[useTriageKeys] Hook called, view:", view);
-
   useEffect(() => {
-    console.log("[useTriageKeys] useEffect running, view:", view);
     // Only active in triage view
     if (view !== "triage") return;
 
@@ -25,19 +24,25 @@ export function useTriageKeys() {
         return;
       }
 
-      switch (e.key.toLowerCase()) {
-        case "k":
-          e.preventDefault();
-          classify("keep");
-          break;
-        case "m":
-          e.preventDefault();
-          classify("maybe");
-          break;
-        case "y":
-          e.preventDefault();
-          classify("yeet");
-          break;
+      // Maybe: Shift + Enter OR Shift + Backspace
+      if (e.shiftKey && (e.key === "Enter" || e.key === "Backspace")) {
+        e.preventDefault();
+        classify("maybe");
+        return;
+      }
+
+      // Keep: Enter (without shift)
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        classify("keep");
+        return;
+      }
+
+      // Yeet: Backspace (without shift)
+      if (e.key === "Backspace" && !e.shiftKey) {
+        e.preventDefault();
+        classify("yeet");
+        return;
       }
     };
 
