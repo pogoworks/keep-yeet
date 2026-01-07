@@ -151,19 +151,20 @@ When triage is accepted:
 - [x] Update Zustand store for project state
 - [x] Wire up navigation in App.tsx
 
-### Phase 5: Triage Mode 🔄 NEXT
-- [ ] Integrate browse components into project flow
-- [ ] Add TriageControls component (KEEP/MAYBE/YEET buttons)
-- [ ] Implement classify action + auto-advance
-- [ ] Add keyboard shortcuts (K/M/Y)
-- [ ] Add progress indicator
-- [ ] Execute triage (move/copy to project folder, trash YEET)
+### Phase 5: Triage Mode ✅ COMPLETE
+- [x] Integrate browse components into project flow
+- [x] Add TriageControls component (KEEP/MAYBE/YEET buttons)
+- [x] Implement classify action + auto-advance
+- [x] Add keyboard shortcuts (K/M/Y)
+- [x] Add progress indicator
+- [x] Add classification badges to filmstrip thumbnails
+- [x] Update execute_triage backend for project paths + move/copy modes
 
-### Phase 6: Review Mode ⏳ PENDING
+### Phase 6: Review Mode 🔄 NEXT
 - [ ] Build ReviewPanel with three columns
 - [ ] Implement drag-and-drop between columns
 - [ ] Add preview panel for selected image
-- [ ] Implement Accept action
+- [ ] Implement Accept action (calls execute_triage)
 
 ### Phase 7: Project Overview ⏳ PENDING
 - [ ] Show all kept/maybe images across folders in project
