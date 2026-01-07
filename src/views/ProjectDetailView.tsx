@@ -1,25 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
 import { AddFolderDialog } from "@/components/AddFolderDialog";
+import { SourceFolderCard } from "@/components/SourceFolderCard";
+import { ProjectStatsBar } from "@/components/ProjectStatsBar";
+import { SubNavigation, type NavTab } from "@/components/SubNavigation";
 import { removeFolderFromProject } from "@/lib/tauri";
 import { ask } from "@tauri-apps/plugin-dialog";
-import {
-  FolderPlus,
-  Trash,
-  Images,
-  CheckCircle,
-  Undo,
-  ArrowRight,
-} from "@/components/ui/pixel-icon";
+import { FolderPlus } from "@/components/ui/pixel-icon";
 
 /**
  * ProjectDetailView - Shows project details with folder list.
@@ -28,12 +17,25 @@ import {
 export function ProjectDetailView() {
   const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
   const [removingFolderId, setRemovingFolderId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const currentProject = useAppStore((state) => state.currentProject);
   const currentProjectPath = useAppStore((state) => state.currentProjectPath);
   const currentProjectStats = useAppStore((state) => state.currentProjectStats);
   const refreshProjectStats = useAppStore((state) => state.refreshProjectStats);
   const selectFolder = useAppStore((state) => state.selectFolder);
+
+  // Build navigation tabs from folders
+  const navTabs = useMemo((): NavTab[] => {
+    const tabs: NavTab[] = [{ id: "overview", label: "Overview", icon: "grid" }];
+    if (currentProject) {
+      currentProject.folders.forEach((folder) => {
+        const name = folder.source_path.split(/[\/\\]/).pop() || folder.source_path;
+        tabs.push({ id: folder.id, label: name, icon: "folder" });
+      });
+    }
+    return tabs;
+  }, [currentProject]);
 
   if (!currentProject || !currentProjectPath) {
     return (
@@ -73,32 +75,29 @@ export function ProjectDetailView() {
     }
   }
 
-  function getFolderName(path: string): string {
-    // Handle both Unix and Windows path separators
-    return path.split(/[\/\\]/).pop() || path;
-  }
-
   function getFolderStats(folderId: string) {
     return currentProjectStats?.folder_stats.find(
       (s) => s.folder_id === folderId
     );
   }
 
-  // Stats bar component
-  const statsBar = currentProjectStats ? (
-    <div className="flex gap-4 px-3 py-2 text-xs">
-      <div className="flex items-center gap-1.5">
-        <CheckCircle size={14} className="text-keep" />
-        <span className="font-medium">{currentProjectStats.total_keep}</span>
-        <span className="text-muted-foreground">kept</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <Undo size={14} className="text-maybe" />
-        <span className="font-medium">{currentProjectStats.total_maybe}</span>
-        <span className="text-muted-foreground">maybe</span>
-      </div>
-    </div>
-  ) : null;
+  const headerSecondary = (
+    <>
+      <SubNavigation
+        tabs={navTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+      {currentProjectStats && (
+        <div className="border-t">
+          <ProjectStatsBar
+            keepCount={currentProjectStats.total_keep}
+            maybeCount={currentProjectStats.total_maybe}
+          />
+        </div>
+      )}
+    </>
+  );
 
   return (
     <AppShell
@@ -108,7 +107,7 @@ export function ProjectDetailView() {
           Add Folder
         </Button>
       }
-      headerSecondary={statsBar}
+      headerSecondary={headerSecondary}
       contentClassName="p-4"
     >
       {currentProject.folders.length === 0 ? (
@@ -130,78 +129,16 @@ export function ProjectDetailView() {
           <h2 className="px-1 text-xs font-medium text-muted-foreground">
             Source Folders
           </h2>
-          {currentProject.folders.map((folder) => {
-            const stats = getFolderStats(folder.id);
-            return (
-              <Card
-                key={folder.id}
-                className="cursor-pointer transition-colors hover:bg-muted/50"
-                onClick={() => selectFolder(folder)}
-              >
-                <CardHeader className="p-3 pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-sm font-medium">
-                        {getFolderName(folder.source_path)}
-                      </CardTitle>
-                      <CardDescription className="truncate font-mono text-xs">
-                        {folder.source_path}
-                      </CardDescription>
-                    </div>
-                    <div className="ml-3 flex items-center gap-2">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          folder.output_mode === "move"
-                            ? "bg-blue-500/10 text-blue-500"
-                            : "bg-purple-500/10 text-purple-500"
-                        }`}
-                      >
-                        {folder.output_mode}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFolder(folder.id);
-                        }}
-                        disabled={removingFolderId === folder.id}
-                      >
-                        <Trash size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-3 pb-3 pt-0">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      {stats && (
-                        <>
-                          <div className="flex items-center gap-1">
-                            <Images size={14} className="text-muted-foreground" />
-                            <span>{stats.source_count} to triage</span>
-                          </div>
-                          {(stats.keep_count > 0 || stats.maybe_count > 0) && (
-                            <>
-                              <span className="text-muted-foreground">|</span>
-                              <span className="text-keep">
-                                {stats.keep_count} kept
-                              </span>
-                              <span className="text-maybe">
-                                {stats.maybe_count} maybe
-                              </span>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    <ArrowRight size={14} className="text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {currentProject.folders.map((folder) => (
+            <SourceFolderCard
+              key={folder.id}
+              folder={folder}
+              stats={getFolderStats(folder.id)}
+              onClick={() => selectFolder(folder)}
+              onRemove={() => handleRemoveFolder(folder.id)}
+              isRemoving={removingFolderId === folder.id}
+            />
+          ))}
         </div>
       )}
 

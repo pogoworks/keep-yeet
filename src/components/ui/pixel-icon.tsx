@@ -128,3 +128,8 @@ export const Eye = createIcon(
   "M9 5H7v2H5v2H3v2H1v2h2v2h2v2h2v2h6v-2h2v-2h2v-2h2v-2h-2V9h-2V7h-2V5H9zm0 2h6v2h2v2h2v2h-2v2h-2v2H9v-2H7v-2H5v-2h2V9h2V7zm2 2h2v2h2v2h-2v2h-2v-2H9v-2h2V9z",
   "Eye"
 );
+
+export const Grid = createIcon(
+  "M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z",
+  "Grid"
+);
