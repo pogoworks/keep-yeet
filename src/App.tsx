@@ -1,27 +1,24 @@
 import { useAppStore } from "@/stores/useAppStore";
 import {
-  BrowseView,
   ProjectListView,
   ProjectDetailView,
-  TriageView,
+  ImageWorkspace,
 } from "@/views";
 
 function App() {
   const view = useAppStore((state) => state.view);
 
   // View-based routing
+  // ImageWorkspace handles browse/triage/review internally for smooth animations
   switch (view) {
     case "projects":
       return <ProjectListView />;
     case "project-detail":
       return <ProjectDetailView />;
     case "browse":
-      return <BrowseView />;
     case "triage":
-      return <TriageView />;
     case "review":
-      // Phase 6: Review view - placeholder for now
-      return <TriageView />;
+      return <ImageWorkspace />;
     default:
       return <ProjectListView />;
   }

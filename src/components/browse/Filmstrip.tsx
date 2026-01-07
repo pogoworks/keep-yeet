@@ -32,25 +32,29 @@ export function Filmstrip({
       <div
         data-slot="filmstrip"
         className={cn(
-          "flex h-[220px] items-center justify-center border-t bg-muted/30",
+          "flex items-center justify-center border-t bg-muted/30",
           className
         )}
+        style={{ height: thumbnailSize + 32 }}
       >
         <p className="text-muted-foreground">No images in folder</p>
       </div>
     );
   }
 
+  const containerHeight = thumbnailSize + 32; // Room for thumbnails + scale effect
+
   return (
     <div
       data-slot="filmstrip"
       className={cn("border-t bg-muted/30", className)}
+      style={{ height: containerHeight }}
     >
-      <ScrollArea className="w-full">
+      <ScrollArea className="h-full w-full">
         <div
           ref={containerRef}
-          className="flex gap-3 p-4"
-          style={{ height: thumbnailSize + 32 }}
+          className="flex items-center gap-3 px-4 transition-[height] duration-300 ease-out"
+          style={{ height: containerHeight }}
         >
           {images.map((image, index) => (
             <FilmstripItem

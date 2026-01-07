@@ -6,7 +6,7 @@ import type { ImageFile, Classification } from "@/stores/useAppStore";
 import { Check, HelpCircle, Trash2 } from "lucide-react";
 
 const filmstripItemVariants = cva(
-  "relative flex-shrink-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-200",
+  "relative flex-shrink-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-300 ease-out",
   {
     variants: {
       selected: {
