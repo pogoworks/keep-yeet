@@ -203,12 +203,6 @@ export const useAppStore = create<AppState>()(
 
       // Triage
       startTriage: () => {
-        const { images, currentFolder } = get();
-        console.log("[startTriage] Called with:", {
-          imagesCount: images.length,
-          currentFolder: currentFolder?.source_path,
-          firstImage: images[0]?.name,
-        });
         set({
           view: "triage",
           classifications: {},
@@ -216,7 +210,6 @@ export const useAppStore = create<AppState>()(
           triageIndex: 0,
           selectedIndex: 0,
         });
-        console.log("[startTriage] State updated to triage view");
       },
 
       classify: (classification) => {
