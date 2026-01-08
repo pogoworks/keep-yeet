@@ -75,9 +75,10 @@ export function ProjectDetailView() {
     onEscapeFromFolderTab: handleEscapeFromFolderTab,
   });
 
-  // Cmd/Ctrl + 1-9 tab navigation, Shift + Enter to start triage
+  // Ctrl+Tab/Ctrl+Shift+Tab sequential nav, Cmd/Ctrl+1-9 direct jump, Shift+Enter triage
   const { isStartTriagePressed } = useTabNavKeys({
     tabs: navTabs,
+    activeTab,
     onTabChange: setActiveTab,
     onStartTriage: handleStartTriage,
     canStartTriage: !!activeFolder,

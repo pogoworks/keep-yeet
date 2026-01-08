@@ -8,6 +8,7 @@ interface NavTab {
 
 interface UseTabNavKeysOptions {
   tabs: NavTab[];
+  activeTab: string;
   onTabChange: (tabId: string) => void;
   /** Called when Shift+Enter is released on a folder tab */
   onStartTriage?: () => void;
@@ -17,14 +18,14 @@ interface UseTabNavKeysOptions {
 
 /**
  * Hook for tab navigation keyboard shortcuts.
- * - Cmd/Ctrl + 1: Overview (first tab)
- * - Cmd/Ctrl + 2: First folder
- * - Cmd/Ctrl + 3: Second folder
- * - etc. up to 9
+ * - Ctrl + Tab: Next tab (sequential)
+ * - Ctrl + Shift + Tab: Previous tab (sequential)
+ * - Cmd/Ctrl + 1-9: Jump to specific tab
  * - Shift + Enter: Start triage (press to preview, release to commit)
  */
 export function useTabNavKeys({
   tabs,
+  activeTab,
   onTabChange,
   onStartTriage,
   canStartTriage = false,
@@ -60,6 +61,24 @@ export function useTabNavKeys({
         e.preventDefault();
         isPressedRef.current = true;
         setIsStartTriagePressed(true);
+        return;
+      }
+
+      // Ctrl + Tab / Ctrl + Shift + Tab: Sequential tab navigation
+      if (e.ctrlKey && e.key === "Tab") {
+        e.preventDefault();
+        const currentIndex = tabs.findIndex((t) => t.id === activeTab);
+        if (currentIndex === -1) return;
+
+        let nextIndex: number;
+        if (e.shiftKey) {
+          // Ctrl + Shift + Tab: Previous tab (wrap to end)
+          nextIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+        } else {
+          // Ctrl + Tab: Next tab (wrap to start)
+          nextIndex = currentIndex === tabs.length - 1 ? 0 : currentIndex + 1;
+        }
+        onTabChange(tabs[nextIndex].id);
         return;
       }
 
@@ -104,7 +123,7 @@ export function useTabNavKeys({
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [view, tabs, onTabChange, onStartTriage, canStartTriage]);
+  }, [view, tabs, activeTab, onTabChange, onStartTriage, canStartTriage]);
 
   return { isStartTriagePressed };
 }
