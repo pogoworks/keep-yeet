@@ -12,9 +12,9 @@ export function AddFolderCard({ onClick }: AddFolderCardProps) {
   return (
     <button
       onClick={onClick}
-      className="flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/30 bg-transparent text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
+      className="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/30 bg-transparent px-4 py-3 text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
     >
-      <FolderPlus size={32} />
+      <FolderPlus size={16} />
       <span className="text-xs font-medium uppercase tracking-wide">
         Add Folder
       </span>

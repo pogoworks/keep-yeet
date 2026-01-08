@@ -62,7 +62,31 @@ pub struct Project {
     pub id: String,
     pub name: String,
     pub created_at: String,
+    #[serde(default = "default_output_directory_mode")]
+    pub output_directory_mode: String, // "unified" | "per-folder"
     pub folders: Vec<Folder>,
+}
+
+fn default_output_directory_mode() -> String {
+    "per-folder".to_string()
+}
+
+// Metadata for tracking file origins in unified mode
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OutputMetadata {
+    pub file_origins: std::collections::HashMap<String, String>, // filename -> source_folder_id
+}
+
+// Extended image info with source folder tracking
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OutputImageInfo {
+    pub id: String,
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub source_folder_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -219,6 +243,86 @@ fn sanitize_name(name: &str) -> String {
         .to_string()
 }
 
+const OUTPUT_METADATA_FILE: &str = "toss-metadata.json";
+
+fn read_output_metadata(project_dir: &Path) -> Result<OutputMetadata, String> {
+    let path = project_dir.join(OUTPUT_METADATA_FILE);
+    if !path.exists() {
+        return Ok(OutputMetadata::default());
+    }
+    let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
+}
+
+fn write_output_metadata(project_dir: &Path, metadata: &OutputMetadata) -> Result<(), String> {
+    let path = project_dir.join(OUTPUT_METADATA_FILE);
+    let content = serde_json::to_string_pretty(metadata).map_err(|e| e.to_string())?;
+    fs::write(&path, content).map_err(|e| e.to_string())
+}
+
+/// Scan a directory and return ImageInfo for all images found
+fn scan_directory_for_images(dir: &Path) -> Result<Vec<ImageInfo>, String> {
+    if !dir.exists() || !dir.is_dir() {
+        return Ok(Vec::new());
+    }
+
+    let mut images = Vec::new();
+    let entries = fs::read_dir(dir).map_err(|e| e.to_string())?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() || !is_image_file(&path) {
+            continue;
+        }
+
+        let metadata = fs::metadata(&path).ok();
+        let path_str = path.to_string_lossy().to_string();
+
+        let (width, height) = image::image_dimensions(&path)
+            .map(|(w, h)| (Some(w), Some(h)))
+            .unwrap_or((None, None));
+
+        images.push(ImageInfo {
+            id: hash_path(&path_str),
+            path: path_str,
+            name: path.file_name().unwrap().to_str().unwrap().to_string(),
+            size: metadata.map(|m| m.len()).unwrap_or(0),
+            width,
+            height,
+        });
+    }
+
+    // Sort by name
+    images.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(images)
+}
+
+/// Generate a unique filename if conflict exists
+fn resolve_filename_conflict(dest_dir: &Path, original_name: &str) -> String {
+    let path = Path::new(original_name);
+    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or(original_name);
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+
+    let mut counter = 1;
+    let mut new_name = original_name.to_string();
+
+    while dest_dir.join(&new_name).exists() {
+        new_name = if ext.is_empty() {
+            format!("{}_{}", stem, counter)
+        } else {
+            format!("{}_{}.{}", stem, counter, ext)
+        };
+        counter += 1;
+
+        // Safety limit
+        if counter > 1000 {
+            break;
+        }
+    }
+
+    new_name
+}
+
 // Project system commands
 #[tauri::command]
 async fn get_app_data_dir(app: tauri::AppHandle) -> Result<String, String> {
@@ -257,6 +361,7 @@ async fn create_project(
         id: id.clone(),
         name: sanitized_name.clone(),
         created_at: created_at.clone(),
+        output_directory_mode: "per-folder".to_string(),
         folders: Vec::new(),
     };
 
@@ -356,28 +461,50 @@ async fn get_project_stats(project_path: String) -> Result<ProjectStats, String>
     let project_dir = Path::new(&project_path);
     let project = read_project_config(project_dir)?;
 
+    let is_unified = project.output_directory_mode == "unified";
     let mut total_keep = 0u32;
     let mut total_maybe = 0u32;
     let mut folder_stats = Vec::new();
 
-    for folder in &project.folders {
-        let folder_name = get_folder_name(&folder.source_path);
-        let source_count = count_images_in_dir(Path::new(&folder.source_path));
+    if is_unified {
+        // In unified mode, count from project-level keep/maybe folders
+        total_keep = count_images_in_dir(&project_dir.join("keep"));
+        total_maybe = count_images_in_dir(&project_dir.join("maybe"));
 
-        let output_dir = project_dir.join(&folder_name);
-        let keep_count = count_images_in_dir(&output_dir.join("keep"));
-        let maybe_count = count_images_in_dir(&output_dir.join("maybe"));
+        // Still provide per-folder source counts (but keep/maybe are 0 per folder)
+        for folder in &project.folders {
+            let folder_name = get_folder_name(&folder.source_path);
+            let source_count = count_images_in_dir(Path::new(&folder.source_path));
 
-        total_keep += keep_count;
-        total_maybe += maybe_count;
+            folder_stats.push(FolderStats {
+                folder_id: folder.id.clone(),
+                folder_name,
+                source_count,
+                keep_count: 0, // Can't attribute in unified mode without scanning metadata
+                maybe_count: 0,
+            });
+        }
+    } else {
+        // Per-folder mode: scan each folder's output directory
+        for folder in &project.folders {
+            let folder_name = get_folder_name(&folder.source_path);
+            let source_count = count_images_in_dir(Path::new(&folder.source_path));
 
-        folder_stats.push(FolderStats {
-            folder_id: folder.id.clone(),
-            folder_name,
-            source_count,
-            keep_count,
-            maybe_count,
-        });
+            let output_dir = project_dir.join(&folder_name);
+            let keep_count = count_images_in_dir(&output_dir.join("keep"));
+            let maybe_count = count_images_in_dir(&output_dir.join("maybe"));
+
+            total_keep += keep_count;
+            total_maybe += maybe_count;
+
+            folder_stats.push(FolderStats {
+                folder_id: folder.id.clone(),
+                folder_name,
+                source_count,
+                keep_count,
+                maybe_count,
+            });
+        }
     }
 
     Ok(ProjectStats {
@@ -522,24 +649,48 @@ async fn execute_triage(
         .find(|f| f.id == folder_id)
         .ok_or_else(|| format!("Folder {} not found in project", folder_id))?;
 
-    // Output folder structure: project_path/folder_name/keep|maybe
-    let folder_name = get_folder_name(&folder.source_path);
-    let output_base = project_dir.join(&folder_name);
-    let keep_folder = output_base.join("keep");
-    let maybe_folder = output_base.join("maybe");
+    let is_unified = project.output_directory_mode == "unified";
+    let is_move = output_mode == "move";
+
+    // Determine output folders based on mode
+    let (keep_folder, maybe_folder) = if is_unified {
+        // Unified mode: project/keep and project/maybe
+        (project_dir.join("keep"), project_dir.join("maybe"))
+    } else {
+        // Per-folder mode: project/folder_name/keep|maybe
+        let folder_name = get_folder_name(&folder.source_path);
+        let output_base = project_dir.join(&folder_name);
+        (output_base.join("keep"), output_base.join("maybe"))
+    };
 
     fs::create_dir_all(&keep_folder).map_err(|e| format!("Failed to create keep folder: {}", e))?;
     fs::create_dir_all(&maybe_folder)
         .map_err(|e| format!("Failed to create maybe folder: {}", e))?;
 
-    let is_move = output_mode == "move";
+    // Load metadata for unified mode (to track origins)
+    let mut metadata = if is_unified {
+        read_output_metadata(project_dir)?
+    } else {
+        OutputMetadata::default()
+    };
 
     // Process keep files
     for file_path in &keep_files {
         let src = Path::new(file_path);
         if let Some(file_name) = src.file_name() {
-            let dest = keep_folder.join(file_name);
+            let file_name_str = file_name.to_string_lossy().to_string();
+            let final_name = if is_unified {
+                resolve_filename_conflict(&keep_folder, &file_name_str)
+            } else {
+                file_name_str.clone()
+            };
+            let dest = keep_folder.join(&final_name);
             move_or_copy_file(src, &dest, is_move)?;
+
+            // Track origin in unified mode
+            if is_unified {
+                metadata.file_origins.insert(final_name, folder_id.clone());
+            }
         }
     }
 
@@ -547,9 +698,25 @@ async fn execute_triage(
     for file_path in &maybe_files {
         let src = Path::new(file_path);
         if let Some(file_name) = src.file_name() {
-            let dest = maybe_folder.join(file_name);
+            let file_name_str = file_name.to_string_lossy().to_string();
+            let final_name = if is_unified {
+                resolve_filename_conflict(&maybe_folder, &file_name_str)
+            } else {
+                file_name_str.clone()
+            };
+            let dest = maybe_folder.join(&final_name);
             move_or_copy_file(src, &dest, is_move)?;
+
+            // Track origin in unified mode
+            if is_unified {
+                metadata.file_origins.insert(final_name, folder_id.clone());
+            }
         }
+    }
+
+    // Save metadata if in unified mode
+    if is_unified {
+        write_output_metadata(project_dir, &metadata)?;
     }
 
     // Yeet files always go to trash (regardless of move/copy mode)
@@ -567,6 +734,222 @@ async fn move_to_trash(paths: Vec<String>) -> Result<(), String> {
         trash::delete(path).map_err(|e| format!("Failed to trash {}: {}", path, e))?;
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn list_output_images(
+    project_path: String,
+    classification: String, // "keep" | "maybe"
+) -> Result<Vec<OutputImageInfo>, String> {
+    let project_dir = Path::new(&project_path);
+    let project = read_project_config(project_dir)?;
+
+    let is_unified = project.output_directory_mode == "unified";
+    let mut all_images = Vec::new();
+
+    if is_unified {
+        // Unified mode: scan project/keep or project/maybe
+        let output_dir = project_dir.join(&classification);
+        let images = scan_directory_for_images(&output_dir)?;
+
+        // Load metadata to get source folder IDs
+        let metadata = read_output_metadata(project_dir)?;
+
+        for img_info in images {
+            let source_folder_id = metadata
+                .file_origins
+                .get(&img_info.name)
+                .cloned()
+                .unwrap_or_default();
+
+            all_images.push(OutputImageInfo {
+                id: img_info.id,
+                path: img_info.path,
+                name: img_info.name,
+                size: img_info.size,
+                width: img_info.width,
+                height: img_info.height,
+                source_folder_id,
+            });
+        }
+    } else {
+        // Per-folder mode: scan folder-name/keep or folder-name/maybe for each folder
+        for folder in &project.folders {
+            let folder_name = get_folder_name(&folder.source_path);
+            let output_dir = project_dir.join(&folder_name).join(&classification);
+
+            if let Ok(images) = scan_directory_for_images(&output_dir) {
+                for img_info in images {
+                    all_images.push(OutputImageInfo {
+                        id: img_info.id,
+                        path: img_info.path,
+                        name: img_info.name,
+                        size: img_info.size,
+                        width: img_info.width,
+                        height: img_info.height,
+                        source_folder_id: folder.id.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    // Sort by name
+    all_images.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(all_images)
+}
+
+#[tauri::command]
+async fn update_project_output_mode(
+    project_path: String,
+    mode: String, // "unified" | "per-folder"
+) -> Result<(), String> {
+    let project_dir = Path::new(&project_path);
+    let mut project = read_project_config(project_dir)?;
+    project.output_directory_mode = mode;
+    write_project_config(project_dir, &project)
+}
+
+#[tauri::command]
+async fn migrate_project_outputs(
+    project_path: String,
+    to_mode: String, // "unified" | "per-folder"
+) -> Result<Vec<String>, String> {
+    let project_dir = Path::new(&project_path);
+    let project = read_project_config(project_dir)?;
+    let mut conflicts = Vec::new();
+
+    if to_mode == "unified" {
+        // Migrate from per-folder to unified
+        let unified_keep = project_dir.join("keep");
+        let unified_maybe = project_dir.join("maybe");
+        fs::create_dir_all(&unified_keep).ok();
+        fs::create_dir_all(&unified_maybe).ok();
+
+        let mut metadata = OutputMetadata::default();
+
+        for folder in &project.folders {
+            let folder_name = get_folder_name(&folder.source_path);
+            let folder_output = project_dir.join(&folder_name);
+
+            // Move keep files
+            let keep_dir = folder_output.join("keep");
+            if keep_dir.exists() {
+                if let Ok(entries) = fs::read_dir(&keep_dir) {
+                    for entry in entries.filter_map(|e| e.ok()) {
+                        let source = entry.path();
+                        if !source.is_file() || !is_image_file(&source) {
+                            continue;
+                        }
+
+                        let filename = source.file_name().unwrap().to_str().unwrap();
+                        let final_name = resolve_filename_conflict(&unified_keep, filename);
+
+                        if final_name != filename {
+                            conflicts.push(format!("{} → {}", filename, final_name));
+                        }
+
+                        let dest = unified_keep.join(&final_name);
+                        fs::rename(&source, &dest).ok();
+                        metadata.file_origins.insert(final_name, folder.id.clone());
+                    }
+                }
+            }
+
+            // Move maybe files
+            let maybe_dir = folder_output.join("maybe");
+            if maybe_dir.exists() {
+                if let Ok(entries) = fs::read_dir(&maybe_dir) {
+                    for entry in entries.filter_map(|e| e.ok()) {
+                        let source = entry.path();
+                        if !source.is_file() || !is_image_file(&source) {
+                            continue;
+                        }
+
+                        let filename = source.file_name().unwrap().to_str().unwrap();
+                        let final_name = resolve_filename_conflict(&unified_maybe, filename);
+
+                        if final_name != filename {
+                            conflicts.push(format!("{} → {}", filename, final_name));
+                        }
+
+                        let dest = unified_maybe.join(&final_name);
+                        fs::rename(&source, &dest).ok();
+                        metadata.file_origins.insert(final_name, folder.id.clone());
+                    }
+                }
+            }
+
+            // Clean up empty folder output directories
+            fs::remove_dir(folder_output.join("keep")).ok();
+            fs::remove_dir(folder_output.join("maybe")).ok();
+            fs::remove_dir(&folder_output).ok();
+        }
+
+        write_output_metadata(project_dir, &metadata)?;
+    } else {
+        // Migrate from unified to per-folder
+        let metadata = read_output_metadata(project_dir)?;
+
+        // Process keep files
+        let unified_keep = project_dir.join("keep");
+        if unified_keep.exists() {
+            if let Ok(entries) = fs::read_dir(&unified_keep) {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let source = entry.path();
+                    if !source.is_file() || !is_image_file(&source) {
+                        continue;
+                    }
+
+                    let filename = source.file_name().unwrap().to_str().unwrap().to_string();
+
+                    // Find which folder this file came from
+                    if let Some(folder_id) = metadata.file_origins.get(&filename) {
+                        if let Some(folder) = project.folders.iter().find(|f| f.id == *folder_id) {
+                            let folder_name = get_folder_name(&folder.source_path);
+                            let dest_dir = project_dir.join(&folder_name).join("keep");
+                            fs::create_dir_all(&dest_dir).ok();
+                            let dest = dest_dir.join(&filename);
+                            fs::rename(&source, &dest).ok();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Process maybe files
+        let unified_maybe = project_dir.join("maybe");
+        if unified_maybe.exists() {
+            if let Ok(entries) = fs::read_dir(&unified_maybe) {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let source = entry.path();
+                    if !source.is_file() || !is_image_file(&source) {
+                        continue;
+                    }
+
+                    let filename = source.file_name().unwrap().to_str().unwrap().to_string();
+
+                    // Find which folder this file came from
+                    if let Some(folder_id) = metadata.file_origins.get(&filename) {
+                        if let Some(folder) = project.folders.iter().find(|f| f.id == *folder_id) {
+                            let folder_name = get_folder_name(&folder.source_path);
+                            let dest_dir = project_dir.join(&folder_name).join("maybe");
+                            fs::create_dir_all(&dest_dir).ok();
+                            let dest = dest_dir.join(&filename);
+                            fs::rename(&source, &dest).ok();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Clean up unified directories and metadata
+        fs::remove_dir(&unified_keep).ok();
+        fs::remove_dir(&unified_maybe).ok();
+        fs::remove_file(project_dir.join(OUTPUT_METADATA_FILE)).ok();
+    }
+
+    Ok(conflicts)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -591,7 +974,11 @@ pub fn run() {
             add_folder_to_project,
             remove_folder_from_project,
             get_folder_stats,
-            get_project_stats
+            get_project_stats,
+            // Gallery commands
+            list_output_images,
+            update_project_output_mode,
+            migrate_project_outputs
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

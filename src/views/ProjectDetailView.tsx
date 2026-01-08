@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
@@ -12,6 +12,8 @@ import { AddFolderCard } from "@/components/AddFolderCard";
 import { SourceFolderCard } from "@/components/SourceFolderCard";
 import { FolderBrowseView } from "@/components/FolderBrowseView";
 import { ProjectStatsBar } from "@/components/ProjectStatsBar";
+import { ProjectGalleryPanel } from "@/components/ProjectGalleryPanel";
+import { OutputModeToggle } from "@/components/OutputModeToggle";
 import { SubNavigation, type NavTab } from "@/components/SubNavigation";
 import { FolderPlus } from "@/components/ui/pixel-icon";
 
@@ -21,6 +23,7 @@ import { FolderPlus } from "@/components/ui/pixel-icon";
  */
 export function ProjectDetailView() {
   const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(true);
 
   const currentProject = useAppStore((state) => state.currentProject);
   const currentProjectPath = useAppStore((state) => state.currentProjectPath);
@@ -66,6 +69,11 @@ export function ProjectDetailView() {
     if (!activeFolder) return;
     selectFolder(activeFolder);
     startTriage();
+  }
+
+  // Handle re-triage of maybes (placeholder - will implement startReTriage action)
+  function handleReTriage() {
+    toast.info("Re-triage feature coming soon");
   }
 
   const isOverview = activeTab === "overview";
@@ -135,6 +143,8 @@ export function ProjectDetailView() {
             <ProjectStatsBar
               keepCount={currentProjectStats.total_keep}
               maybeCount={currentProjectStats.total_maybe}
+              isGalleryOpen={isGalleryOpen}
+              onGalleryToggle={() => setIsGalleryOpen((prev) => !prev)}
             />
           </motion.div>
         </div>
@@ -145,11 +155,11 @@ export function ProjectDetailView() {
   return (
     <AppShell
       headerSecondary={headerSecondary}
-      contentClassName={isOverview ? "p-4" : undefined}
-      contentScrolls={isOverview}
+      contentClassName={isOverview && currentProject.folders.length === 0 ? "p-4" : undefined}
+      contentScrolls={false}
     >
       {isOverview ? (
-        // Overview: Folder cards grid
+        // Overview: Split layout - folders on left, gallery on right
         currentProject.folders.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4">
             <FolderPlus size={48} className="text-muted-foreground/50" />
@@ -165,20 +175,55 @@ export function ProjectDetailView() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-2">
-            <h2 className="px-1 text-xs font-medium text-muted-foreground">
-              Source Folders
-            </h2>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
-              {currentProject.folders.map((folder) => (
-                <SourceFolderCard
-                  key={folder.id}
-                  folder={folder}
-                  stats={getFolderStats(folder.id)}
-                  onClick={() => setActiveTab(folder.id)}
-                />
-              ))}
-              <AddFolderCard onClick={() => setIsAddFolderOpen(true)} />
+          <div className="flex h-full flex-col">
+            {/* Main split area */}
+            <div className="relative flex min-h-0 flex-1 overflow-hidden">
+              {/* Left: Folder cards - 3-column width using rem for scaling */}
+              <div className="h-full w-[40rem] flex-shrink-0 space-y-3 overflow-auto p-4">
+                <h2 className="px-1 text-xs font-medium text-muted-foreground">
+                  Source Folders
+                </h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {currentProject.folders.map((folder) => (
+                    <SourceFolderCard
+                      key={folder.id}
+                      folder={folder}
+                      stats={getFolderStats(folder.id)}
+                      onClick={() => setActiveTab(folder.id)}
+                    />
+                  ))}
+                </div>
+                <AddFolderCard onClick={() => setIsAddFolderOpen(true)} />
+              </div>
+
+              {/* Right: Gallery panel - fills remaining space */}
+              <AnimatePresence>
+                {isGalleryOpen && (
+                  <motion.div
+                    className="h-full min-w-0 flex-1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  >
+                    <ProjectGalleryPanel
+                      projectPath={currentProjectPath}
+                      onReTriage={handleReTriage}
+                      className="h-full"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Bottom bar - spans full width */}
+            <div className="flex items-center gap-1.5 border-t bg-background px-3 py-2 text-xs">
+              <OutputModeToggle
+                projectPath={currentProjectPath}
+                currentMode={currentProject.output_directory_mode ?? "per-folder"}
+                projectStats={currentProjectStats}
+                onModeChanged={refreshProjectStats}
+              />
             </div>
           </div>
         )

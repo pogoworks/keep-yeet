@@ -32,7 +32,13 @@ export interface Project {
   id: string;
   name: string;
   created_at: string;
+  output_directory_mode: "unified" | "per-folder";
   folders: Folder[];
+}
+
+// Extended image info with source folder tracking (for gallery)
+export interface OutputImageInfo extends ImageInfo {
+  source_folder_id: string;
 }
 
 export interface FolderStats {
@@ -160,4 +166,29 @@ export async function pickOutputLocation(): Promise<string | null> {
     title: "Select output location for projects",
   });
   return result as string | null;
+}
+
+// Gallery commands
+export async function listOutputImages(
+  projectPath: string,
+  classification: "keep" | "maybe"
+): Promise<OutputImageInfo[]> {
+  return invoke<OutputImageInfo[]>("list_output_images", {
+    projectPath,
+    classification,
+  });
+}
+
+export async function updateProjectOutputMode(
+  projectPath: string,
+  mode: "unified" | "per-folder"
+): Promise<void> {
+  return invoke("update_project_output_mode", { projectPath, mode });
+}
+
+export async function migrateProjectOutputs(
+  projectPath: string,
+  toMode: "unified" | "per-folder"
+): Promise<string[]> {
+  return invoke<string[]>("migrate_project_outputs", { projectPath, toMode });
 }

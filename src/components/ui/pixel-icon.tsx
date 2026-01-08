@@ -153,3 +153,8 @@ export const MoreHorizontal = createIcon(
   "M1 9h6v6H1V9zm2 2v2h2v-2H3zm6-2h6v6H9V9zm2 2v2h2v-2h-2zm6-2h6v6h-6V9zm2 2v2h2v-2h-2z",
   "MoreHorizontal"
 );
+
+export const PanelRight = createIcon(
+  "M2 4h20v16H2V4zm2 2v12h10V6H4zm12 0v12h4V6h-4z",
+  "PanelRight"
+);
