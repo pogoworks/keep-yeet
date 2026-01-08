@@ -72,7 +72,9 @@ interface AppState {
   // Actions - Triage
   startTriage: () => void;
   classify: (classification: Classification) => void;
+  unclassify: () => void;
   reclassify: (imageId: string, classification: Classification, targetIndex?: number) => void;
+  reclassifyBatch: (imageIds: string[], classification: Classification) => void;
   finishTriage: () => void;
   resetTriage: () => void;
 
@@ -239,6 +241,37 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      unclassify: () => {
+        const { images, triageIndex, classifications, classificationOrder } = get();
+        const currentImage = images[triageIndex];
+        if (!currentImage) return;
+
+        const existingClassification = classifications[currentImage.id];
+        const prevIndex = Math.max(0, triageIndex - 1);
+
+        if (!existingClassification) {
+          // Current image not classified - just navigate back
+          set({ triageIndex: prevIndex, selectedIndex: prevIndex });
+          return;
+        }
+
+        // Remove current image's classification
+        const { [currentImage.id]: _, ...newClassifications } = classifications;
+
+        // Remove from classificationOrder
+        const newOrder = { ...classificationOrder };
+        newOrder[existingClassification] = newOrder[existingClassification].filter(
+          (id) => id !== currentImage.id
+        );
+
+        set({
+          classifications: newClassifications,
+          classificationOrder: newOrder,
+          triageIndex: prevIndex,
+          selectedIndex: prevIndex,
+        });
+      },
+
       reclassify: (imageId, classification, targetIndex) => {
         const { classifications, classificationOrder } = get();
         const currentClassification = classifications[imageId];
@@ -252,22 +285,56 @@ export const useAppStore = create<AppState>()(
           [imageId]: classification,
         };
 
-        // Update order: remove from ALL columns first, then insert into target
+        // Update order: remove from ALL columns first
         const newOrder = {
           keep: classificationOrder.keep.filter((id) => id !== imageId),
           maybe: classificationOrder.maybe.filter((id) => id !== imageId),
           yeet: classificationOrder.yeet.filter((id) => id !== imageId),
         };
 
-        // Add to new classification order at specified index (or end)
-        const insertAt = targetIndex !== undefined
-          ? Math.min(targetIndex, newOrder[classification].length)
-          : newOrder[classification].length;
-        newOrder[classification] = [
-          ...newOrder[classification].slice(0, insertAt),
-          imageId,
-          ...newOrder[classification].slice(insertAt),
-        ];
+        // Prevent duplicates - only add if not already present
+        if (!newOrder[classification].includes(imageId)) {
+          // Add to new classification order at specified index (or end)
+          const insertAt = targetIndex !== undefined
+            ? Math.min(targetIndex, newOrder[classification].length)
+            : newOrder[classification].length;
+          newOrder[classification] = [
+            ...newOrder[classification].slice(0, insertAt),
+            imageId,
+            ...newOrder[classification].slice(insertAt),
+          ];
+        }
+
+        set({
+          classifications: newClassifications,
+          classificationOrder: newOrder,
+        });
+      },
+
+      reclassifyBatch: (imageIds, classification) => {
+        const { classifications, classificationOrder } = get();
+        if (imageIds.length === 0) return;
+
+        // Build new classifications
+        const newClassifications = { ...classifications };
+        imageIds.forEach((imageId) => {
+          newClassifications[imageId] = classification;
+        });
+
+        // Remove all imageIds from all columns
+        const idsSet = new Set(imageIds);
+        const newOrder = {
+          keep: classificationOrder.keep.filter((id) => !idsSet.has(id)),
+          maybe: classificationOrder.maybe.filter((id) => !idsSet.has(id)),
+          yeet: classificationOrder.yeet.filter((id) => !idsSet.has(id)),
+        };
+
+        // Add all to target column (avoiding duplicates)
+        imageIds.forEach((imageId) => {
+          if (!newOrder[classification].includes(imageId)) {
+            newOrder[classification].push(imageId);
+          }
+        });
 
         set({
           classifications: newClassifications,

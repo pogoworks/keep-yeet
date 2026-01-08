@@ -39,7 +39,7 @@ export function ImageWorkspace() {
 
   // Keyboard navigation and triage shortcuts
   useKeyboardNav();
-  useTriageKeys();
+  const { pressedKey } = useTriageKeys();
   useEscapeNav(); // ESC → exit triage (with confirmation if in progress)
 
   // Track last classification for visual feedback
@@ -131,7 +131,7 @@ export function ImageWorkspace() {
   // Footer - triage controls + filmstrip
   const footer = (
     <div className="border-t">
-      <TriageControls />
+      <TriageControls pressedKey={pressedKey} />
       <div style={{ height: filmstripHeight }} className="overflow-hidden">
         <Filmstrip
           images={images}

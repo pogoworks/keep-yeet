@@ -9,6 +9,7 @@ import type { Folder } from "@/lib/tauri";
 interface FolderBrowseViewProps {
   folder: Folder;
   onStartTriage: () => void;
+  isStartTriagePressed?: boolean;
 }
 
 const THUMBNAIL_SIZE = 100;
@@ -21,6 +22,7 @@ const FILMSTRIP_HEIGHT = THUMBNAIL_SIZE + 32; // thumbnail + padding
 export function FolderBrowseView({
   folder,
   onStartTriage,
+  isStartTriagePressed = false,
 }: FolderBrowseViewProps) {
   const {
     images,
@@ -78,6 +80,7 @@ export function FolderBrowseView({
             onClick={onStartTriage}
             size="lg"
             className="shadow-lg"
+            isPressed={isStartTriagePressed}
           />
         </div>
 

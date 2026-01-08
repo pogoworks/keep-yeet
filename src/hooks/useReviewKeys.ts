@@ -25,7 +25,7 @@ export function useReviewKeys(
   setFocusedImageId: React.Dispatch<React.SetStateAction<string | null>>
 ) {
   const view = useAppStore((state) => state.view);
-  const reclassify = useAppStore((state) => state.reclassify);
+  const reclassifyBatch = useAppStore((state) => state.reclassifyBatch);
 
   // Find which column and index an image is in
   const findImageLocation = useCallback((imageId: string | null) => {
@@ -110,13 +110,11 @@ export function useReviewKeys(
           // Don't wrap around - only move if there's an adjacent column
           if (targetColIndex >= 0 && targetColIndex < columns.length) {
             const targetClassification = columns[targetColIndex];
-            // Move all selected images, maintaining their relative positions
-            selectedImageIds.forEach((imageId) => {
-              const imgLocation = findImageLocation(imageId);
-              if (imgLocation) {
-                reclassify(imageId, targetClassification, imgLocation.index);
-              }
-            });
+            // Move all in single atomic operation
+            reclassifyBatch(Array.from(selectedImageIds), targetClassification);
+            // Clear selection after move
+            setSelectedImageIds(new Set());
+            setFocusedImageId(null);
           }
           return;
         }
@@ -154,35 +152,36 @@ export function useReviewKeys(
       // Reclassification shortcuts - apply to all selected
       if (selectedImageIds.size === 0) return;
 
+      // Helper to reclassify all selected and clear selection
+      const reclassifySelected = (classification: Classification) => {
+        reclassifyBatch(Array.from(selectedImageIds), classification);
+        setSelectedImageIds(new Set());
+        setFocusedImageId(null);
+      };
+
       // Maybe: Cmd/Ctrl + Enter OR Cmd/Ctrl + Backspace
       if ((e.metaKey || e.ctrlKey) && (e.key === "Enter" || e.key === "Backspace")) {
         e.preventDefault();
-        selectedImageIds.forEach((imageId) => {
-          reclassify(imageId, "maybe");
-        });
+        reclassifySelected("maybe");
         return;
       }
 
       // Keep: Enter (without modifier)
       if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        selectedImageIds.forEach((imageId) => {
-          reclassify(imageId, "keep");
-        });
+        reclassifySelected("keep");
         return;
       }
 
       // Yeet: Backspace (without modifier)
       if (e.key === "Backspace" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        selectedImageIds.forEach((imageId) => {
-          reclassify(imageId, "yeet");
-        });
+        reclassifySelected("yeet");
         return;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [view, focusedImageId, selectedImageIds, classifiedImages, reclassify, findImageLocation, setSelectedImageIds, setFocusedImageId]);
+  }, [view, focusedImageId, selectedImageIds, classifiedImages, reclassifyBatch, findImageLocation, setSelectedImageIds, setFocusedImageId]);
 }

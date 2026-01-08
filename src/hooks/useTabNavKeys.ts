@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAppStore } from "@/stores/useAppStore";
 
 interface NavTab {
@@ -9,7 +9,7 @@ interface NavTab {
 interface UseTabNavKeysOptions {
   tabs: NavTab[];
   onTabChange: (tabId: string) => void;
-  /** Called when Cmd/Ctrl+Enter is pressed on a folder tab */
+  /** Called when Shift+Enter is released on a folder tab */
   onStartTriage?: () => void;
   /** Whether currently on a folder tab (not overview) */
   canStartTriage?: boolean;
@@ -21,7 +21,7 @@ interface UseTabNavKeysOptions {
  * - Cmd/Ctrl + 2: First folder
  * - Cmd/Ctrl + 3: Second folder
  * - etc. up to 9
- * - Cmd/Ctrl + Enter: Start triage (when on a folder tab)
+ * - Shift + Enter: Start triage (press to preview, release to commit)
  */
 export function useTabNavKeys({
   tabs,
@@ -30,6 +30,9 @@ export function useTabNavKeys({
   canStartTriage = false,
 }: UseTabNavKeysOptions) {
   const view = useAppStore((state) => state.view);
+  const [isStartTriagePressed, setIsStartTriagePressed] = useState(false);
+  // Ref to avoid stale closure in keyup handler
+  const isPressedRef = useRef(false);
 
   useEffect(() => {
     // Only active in project-detail view
@@ -49,15 +52,19 @@ export function useTabNavKeys({
         return;
       }
 
-      // Check for Cmd (Mac) or Ctrl (Windows/Linux)
-      if (!(e.metaKey || e.ctrlKey)) return;
+      // Ignore key repeat
+      if (e.repeat) return;
 
-      // Cmd/Ctrl + Enter: Start triage
-      if (e.key === "Enter" && canStartTriage && onStartTriage) {
+      // Shift + Enter: Preview start triage (don't trigger yet)
+      if (e.shiftKey && e.key === "Enter" && canStartTriage && onStartTriage) {
         e.preventDefault();
-        onStartTriage();
+        isPressedRef.current = true;
+        setIsStartTriagePressed(true);
         return;
       }
+
+      // Check for Cmd (Mac) or Ctrl (Windows/Linux) for tab switching
+      if (!(e.metaKey || e.ctrlKey)) return;
 
       // Number keys 1-9 for tab switching
       const keyNum = parseInt(e.key, 10);
@@ -73,7 +80,31 @@ export function useTabNavKeys({
       }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Trigger start triage on Shift+Enter release
+      if (e.key === "Enter" && isPressedRef.current && onStartTriage) {
+        e.preventDefault();
+        onStartTriage();
+        isPressedRef.current = false;
+        setIsStartTriagePressed(false);
+      }
+    };
+
+    // Clear pressed state if window loses focus
+    const handleBlur = () => {
+      isPressedRef.current = false;
+      setIsStartTriagePressed(false);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
   }, [view, tabs, onTabChange, onStartTriage, canStartTriage]);
+
+  return { isStartTriagePressed };
 }

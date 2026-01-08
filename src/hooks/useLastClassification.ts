@@ -7,23 +7,19 @@ import { useAppStore, type Classification } from "@/stores/useAppStore";
 export function useLastClassification() {
   const classifications = useAppStore((state) => state.classifications);
   const [lastClassification, setLastClassification] = useState<Classification | null>(null);
-  const prevCountRef = useRef(0);
   const prevClassificationsRef = useRef<Record<string, Classification>>({});
 
   useEffect(() => {
-    const currentCount = Object.keys(classifications).length;
-    const prevCount = prevCountRef.current;
+    const prevClassifications = prevClassificationsRef.current;
 
-    if (currentCount > prevCount) {
-      const prevKeys = new Set(Object.keys(prevClassificationsRef.current));
-      const newKey = Object.keys(classifications).find((key) => !prevKeys.has(key));
-
-      if (newKey) {
-        setLastClassification(classifications[newKey]);
+    // Find any classification that changed (new or reclassified)
+    for (const [imageId, classification] of Object.entries(classifications)) {
+      if (prevClassifications[imageId] !== classification) {
+        setLastClassification(classification);
+        break;
       }
     }
 
-    prevCountRef.current = currentCount;
     prevClassificationsRef.current = { ...classifications };
   }, [classifications]);
 

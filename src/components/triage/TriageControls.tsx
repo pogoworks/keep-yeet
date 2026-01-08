@@ -1,4 +1,4 @@
-import { useAppStore, useTriageProgress } from "@/stores/useAppStore";
+import { useAppStore, useTriageProgress, type Classification } from "@/stores/useAppStore";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Check, Undo, Trash } from "@/components/ui/pixel-icon";
@@ -6,13 +6,14 @@ import { cn } from "@/lib/utils";
 
 interface TriageControlsProps {
   className?: string;
+  pressedKey?: Classification | null;
 }
 
 /**
  * TriageControls - Bottom bar with KEEP/MAYBE/YEET buttons.
  * Shows progress indicator and keyboard shortcuts.
  */
-export function TriageControls({ className }: TriageControlsProps) {
+export function TriageControls({ className, pressedKey }: TriageControlsProps) {
   const classify = useAppStore((state) => state.classify);
   const images = useAppStore((state) => state.images);
   const { current, total } = useTriageProgress();
@@ -49,6 +50,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           shortcut="D"
           onClick={() => classify("yeet")}
           disabled={isComplete || images.length === 0}
+          isPressed={pressedKey === "yeet"}
         />
         <TriageButton
           variant="maybe"
@@ -57,6 +59,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           shortcut="␣"
           onClick={() => classify("maybe")}
           disabled={isComplete || images.length === 0}
+          isPressed={pressedKey === "maybe"}
         />
         <TriageButton
           variant="keep"
@@ -65,6 +68,7 @@ export function TriageControls({ className }: TriageControlsProps) {
           shortcut="K"
           onClick={() => classify("keep")}
           disabled={isComplete || images.length === 0}
+          isPressed={pressedKey === "keep"}
         />
       </div>
 
@@ -83,7 +87,14 @@ interface TriageButtonProps {
   shortcut: string;
   onClick: () => void;
   disabled?: boolean;
+  isPressed?: boolean;
 }
+
+const pressedStyles = {
+  keep: "bg-keep text-keep-foreground shadow-[var(--glow-keep)] scale-[1.02]",
+  maybe: "bg-maybe text-maybe-foreground shadow-[var(--glow-maybe)] scale-[1.02]",
+  yeet: "bg-yeet text-yeet-foreground shadow-[var(--glow-yeet)] scale-[1.02]",
+};
 
 function TriageButton({
   variant,
@@ -92,6 +103,7 @@ function TriageButton({
   shortcut,
   onClick,
   disabled,
+  isPressed,
 }: TriageButtonProps) {
   return (
     <Button
@@ -99,7 +111,10 @@ function TriageButton({
       size="lg"
       onClick={onClick}
       disabled={disabled}
-      className="relative min-w-[120px] gap-2"
+      className={cn(
+        "relative min-w-[120px] gap-2",
+        isPressed && pressedStyles[variant]
+      )}
     >
       {icon}
       <span>{label}</span>

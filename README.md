@@ -21,8 +21,10 @@ Built for photographers, digital artists, and anyone who generates lots of image
 ### triage mode
 - Full-screen image with classification controls
 - Progress tracking (current / total)
+- Hold key to preview decision, release to commit
 - Auto-advance after each decision
-- Three classifications: **keep** (electric chartreuse), **maybe** (soft violet), **yeet** (hot coral)
+- Undo with backspace to go back and reclassify
+- Three classifications: **keep** (vibrant lime), **maybe** (electric cyan), **yeet** (hot rose)
 
 ### review mode
 - Three-column drag-and-drop grid
@@ -38,29 +40,38 @@ Built for photographers, digital artists, and anyone who generates lots of image
 
 ## keyboard shortcuts
 
-### navigation
+### global
 | key | action |
 |-----|--------|
-| ← / → | navigate images |
+| Esc | go back / exit current view |
+
+### project detail view
+| key | action |
+|-----|--------|
+| ⌘/Ctrl + 1-9 | switch tabs (1 = overview, 2+ = folders) |
+| Shift + Enter | start triage (when on folder tab) |
+| Esc | go back (folder → overview → projects) |
 
 ### triage mode
 | key | action |
 |-----|--------|
-| Enter | keep |
-| Backspace | yeet |
-| Shift + Enter | maybe |
-| Shift + Backspace | maybe |
+| ← / → | navigate images |
+| K | keep (hold to preview, release to commit) |
+| Space | maybe (hold to preview, release to commit) |
+| D | yeet (hold to preview, release to commit) |
+| Backspace | undo last classification and go back |
+| Esc | exit triage (confirms if in progress) |
 
 ### review mode
 | key | action |
 |-----|--------|
 | ↑ / ↓ | navigate within column |
-| Shift + ↑ / ↓ | extend selection |
+| Shift + ↑/↓ | extend selection |
 | ← / → | navigate between columns |
-| Alt + ← / → | move selected to adjacent column |
-| Enter | reclassify as keep |
-| Backspace | reclassify as yeet |
-| Cmd/Ctrl + Enter | reclassify as maybe |
+| Alt + ←/→ | move selected to adjacent column |
+| Enter | reclassify selected as keep |
+| Backspace | reclassify selected as yeet |
+| ⌘/Ctrl + Enter | reclassify selected as maybe |
 
 ## stack
 

@@ -75,8 +75,8 @@ export function ProjectDetailView() {
     onEscapeFromFolderTab: handleEscapeFromFolderTab,
   });
 
-  // Cmd/Ctrl + 1-9 tab navigation, Cmd/Ctrl + Enter to start triage
-  useTabNavKeys({
+  // Cmd/Ctrl + 1-9 tab navigation, Shift + Enter to start triage
+  const { isStartTriagePressed } = useTabNavKeys({
     tabs: navTabs,
     onTabChange: setActiveTab,
     onStartTriage: handleStartTriage,
@@ -179,6 +179,7 @@ export function ProjectDetailView() {
         <FolderBrowseView
           folder={activeFolder}
           onStartTriage={handleStartTriage}
+          isStartTriagePressed={isStartTriagePressed}
         />
       ) : null}
 
