@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { listImages, getThumbnail } from "@/lib/tauri";
-import type { ImageFile } from "@/stores/useAppStore";
+import { useState, useEffect, useCallback } from "react";
+import { useAppStore, type ImageFile } from "@/stores/useAppStore";
 
 export interface FolderSession {
   images: ImageFile[];
@@ -15,94 +14,39 @@ export interface FolderSession {
 
 /**
  * Hook for managing per-folder image state.
- * Encapsulates image loading, selection, and navigation for inline browsing.
+ * Reads from the store's folder cache for instant tab switching.
+ * Selection state is local to each tab instance.
  */
 export function useFolderSession(
   folderId: string | null,
   sourcePath: string | null
 ): FolderSession {
-  const [images, setImages] = useState<ImageFile[]>([]);
+  // Get cache and refresh action from store
+  const folderCache = useAppStore((state) => state.folderCache);
+  const refreshFolderCache = useAppStore((state) => state.refreshFolderCache);
+
+  // Local selection state (per-tab, not cached)
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const loadingSessionRef = useRef(0);
 
-  // Load images when folder changes
+  // Get cached data for this folder
+  const cacheEntry = folderId ? folderCache[folderId] : undefined;
+
+  // Reset selection when folder changes
   useEffect(() => {
-    if (!folderId || !sourcePath) {
-      setImages([]);
-      setSelectedIndex(0);
-      setIsLoading(false);
-      setError(null);
-      return;
+    setSelectedIndex(0);
+  }, [folderId]);
+
+  // If not in cache and we have a valid folder, trigger load
+  useEffect(() => {
+    if (folderId && sourcePath && !cacheEntry) {
+      refreshFolderCache(folderId, sourcePath);
     }
+  }, [folderId, sourcePath, cacheEntry, refreshFolderCache]);
 
-    const currentSession = ++loadingSessionRef.current;
-
-    async function loadFolderImages() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const imageInfos = await listImages(sourcePath!);
-
-        if (loadingSessionRef.current !== currentSession) return;
-
-        if (imageInfos.length === 0) {
-          setError("No images found in this folder");
-          setImages([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const loadedImages: ImageFile[] = imageInfos.map((info) => ({
-          id: info.id,
-          path: info.path,
-          name: info.name,
-          thumbnailUrl: null,
-          size: info.size,
-          dimensions:
-            info.width && info.height
-              ? { width: info.width, height: info.height }
-              : undefined,
-        }));
-
-        setImages(loadedImages);
-        setSelectedIndex(0);
-        setIsLoading(false);
-
-        // Load thumbnails in background
-        for (const image of loadedImages) {
-          // Check session BEFORE any async work
-          if (loadingSessionRef.current !== currentSession) return;
-
-          try {
-            const thumbnailUrl = await getThumbnail(image.path, 180);
-
-            // Check session AFTER async work, before state update
-            if (loadingSessionRef.current !== currentSession) return;
-
-            setImages((prev) =>
-              prev.map((img) =>
-                img.id === image.id ? { ...img, thumbnailUrl } : img
-              )
-            );
-          } catch (err) {
-            // Check session before logging to avoid noise from cancelled loads
-            if (loadingSessionRef.current !== currentSession) return;
-            console.error(`Failed to load thumbnail for ${image.name}:`, err);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load images:", err);
-        if (loadingSessionRef.current !== currentSession) return;
-        setError(err instanceof Error ? err.message : "Failed to load images");
-        setIsLoading(false);
-      }
-    }
-
-    loadFolderImages();
-  }, [folderId, sourcePath]);
+  // Derive state from cache
+  const images = cacheEntry?.images ?? [];
+  const isLoading = cacheEntry?.status === "loading" || (!cacheEntry && !!folderId);
+  const error = cacheEntry?.status === "error" ? (cacheEntry.error ?? "Failed to load") : null;
 
   // Navigation methods
   const selectImage = useCallback((index: number) => {
@@ -110,10 +54,7 @@ export function useFolderSession(
   }, []);
 
   const navigateNext = useCallback(() => {
-    setSelectedIndex((prev) => {
-      const maxIndex = images.length - 1;
-      return Math.min(prev + 1, maxIndex);
-    });
+    setSelectedIndex((prev) => Math.min(prev + 1, images.length - 1));
   }, [images.length]);
 
   const navigatePrev = useCallback(() => {

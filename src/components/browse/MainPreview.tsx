@@ -62,8 +62,26 @@ export function MainPreview({ image, className }: MainPreviewProps) {
     );
   }
 
-  // Loading state
+  // Loading state - show thumbnail as placeholder if available
   if (isLoading) {
+    if (image.thumbnailUrl) {
+      return (
+        <div
+          data-slot="main-preview"
+          className={cn(
+            "flex flex-1 items-center justify-center bg-black/95 p-4",
+            className
+          )}
+        >
+          <img
+            src={image.thumbnailUrl}
+            alt={image.name}
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+      );
+    }
+    // No thumbnail - show empty black background
     return (
       <div
         data-slot="main-preview"
@@ -71,12 +89,7 @@ export function MainPreview({ image, className }: MainPreviewProps) {
           "flex flex-1 items-center justify-center bg-black/95",
           className
         )}
-      >
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading image...</p>
-        </div>
-      </div>
+      />
     );
   }
 

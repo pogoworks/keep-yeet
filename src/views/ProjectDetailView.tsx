@@ -27,6 +27,7 @@ export function ProjectDetailView() {
   const currentProjectStats = useAppStore((state) => state.currentProjectStats);
   const currentFolder = useAppStore((state) => state.currentFolder);
   const refreshProjectStats = useAppStore((state) => state.refreshProjectStats);
+  const preloadProjectFolders = useAppStore((state) => state.preloadProjectFolders);
   const selectFolder = useAppStore((state) => state.selectFolder);
   const startTriage = useAppStore((state) => state.startTriage);
 
@@ -102,6 +103,8 @@ export function ProjectDetailView() {
     setIsAddFolderOpen(false);
     try {
       await refreshProjectStats();
+      // Preload images for all folders (including the new one)
+      preloadProjectFolders();
     } catch (err) {
       console.error("Failed to refresh project stats:", err);
       toast.error("Failed to refresh project stats");

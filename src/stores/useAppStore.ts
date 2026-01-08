@@ -11,6 +11,8 @@ import {
   listProjects as fetchProjects,
   getProject as fetchProject,
   getProjectStats as fetchProjectStats,
+  listImages,
+  getThumbnail,
 } from "@/lib/tauri";
 
 export type Classification = "keep" | "maybe" | "yeet";
@@ -27,6 +29,12 @@ export interface ImageFile {
   thumbnailUrl: string | null;
   size: number;
   dimensions?: { width: number; height: number };
+}
+
+export interface FolderCacheEntry {
+  images: ImageFile[];
+  status: "loading" | "loaded" | "error";
+  error?: string;
 }
 
 interface AppState {
@@ -48,6 +56,9 @@ interface AppState {
   classifications: Record<string, Classification>;
   classificationOrder: { keep: string[]; maybe: string[]; yeet: string[] };
   triageIndex: number;
+
+  // Folder image cache
+  folderCache: Record<string, FolderCacheEntry>;
 
   // Actions - Navigation
   setView: (view: AppView) => void;
@@ -78,6 +89,10 @@ interface AppState {
   finishTriage: () => void;
   resetTriage: () => void;
 
+  // Actions - Folder Cache
+  preloadProjectFolders: () => Promise<void>;
+  refreshFolderCache: (folderId: string, sourcePath: string) => Promise<void>;
+
   // Actions - Reset
   reset: () => void;
 }
@@ -94,6 +109,7 @@ const initialState = {
   classifications: {} as Record<string, Classification>,
   classificationOrder: { keep: [], maybe: [], yeet: [] } as { keep: string[]; maybe: string[]; yeet: string[] },
   triageIndex: 0,
+  folderCache: {} as Record<string, FolderCacheEntry>,
 };
 
 export const useAppStore = create<AppState>()(
@@ -119,6 +135,8 @@ export const useAppStore = create<AppState>()(
           currentProjectStats: stats,
           view: "project-detail",
         });
+        // Preload folder images in background (non-blocking)
+        get().preloadProjectFolders();
       },
 
       clearProject: () => {
@@ -127,6 +145,7 @@ export const useAppStore = create<AppState>()(
           currentProjectPath: null,
           currentProjectStats: null,
           currentFolder: null,
+          folderCache: {},
           view: "projects",
         });
       },
@@ -137,6 +156,100 @@ export const useAppStore = create<AppState>()(
         const project = await fetchProject(currentProjectPath);
         const stats = await fetchProjectStats(currentProjectPath);
         set({ currentProject: project, currentProjectStats: stats });
+      },
+
+      // Folder Cache
+      preloadProjectFolders: async () => {
+        const { currentProject } = get();
+        if (!currentProject) return;
+
+        // Mark all folders as loading
+        const initialCache: Record<string, FolderCacheEntry> = {};
+        for (const folder of currentProject.folders) {
+          initialCache[folder.id] = { images: [], status: "loading" };
+        }
+        set({ folderCache: initialCache });
+
+        // Load all folders in parallel
+        await Promise.all(
+          currentProject.folders.map((folder) =>
+            get().refreshFolderCache(folder.id, folder.source_path)
+          )
+        );
+      },
+
+      refreshFolderCache: async (folderId, sourcePath) => {
+        // Mark folder as loading (preserve other folders)
+        set((state) => ({
+          folderCache: {
+            ...state.folderCache,
+            [folderId]: { images: [], status: "loading" },
+          },
+        }));
+
+        try {
+          const imageInfos = await listImages(sourcePath);
+
+          const images: ImageFile[] = imageInfos.map((info) => ({
+            id: info.id,
+            path: info.path,
+            name: info.name,
+            thumbnailUrl: null,
+            size: info.size,
+            dimensions:
+              info.width && info.height
+                ? { width: info.width, height: info.height }
+                : undefined,
+          }));
+
+          set((state) => ({
+            folderCache: {
+              ...state.folderCache,
+              [folderId]: { images, status: "loaded" },
+            },
+          }));
+
+          // Load thumbnails in background
+          for (const image of images) {
+            // Check if folder still in cache (project may have changed)
+            const cache = get().folderCache[folderId];
+            if (!cache || cache.status !== "loaded") break;
+
+            try {
+              const thumbnailUrl = await getThumbnail(image.path, 180);
+
+              set((state) => {
+                const cacheEntry = state.folderCache[folderId];
+                if (!cacheEntry || cacheEntry.status !== "loaded") return state;
+
+                return {
+                  folderCache: {
+                    ...state.folderCache,
+                    [folderId]: {
+                      ...cacheEntry,
+                      images: cacheEntry.images.map((img) =>
+                        img.id === image.id ? { ...img, thumbnailUrl } : img
+                      ),
+                    },
+                  },
+                };
+              });
+            } catch (err) {
+              console.error(`Failed to load thumbnail for ${image.name}:`, err);
+            }
+          }
+        } catch (err) {
+          set((state) => ({
+            folderCache: {
+              ...state.folderCache,
+              [folderId]: {
+                images: [],
+                status: "error",
+                error: err instanceof Error ? err.message : "Failed to load images",
+              },
+            },
+          }));
+        }
       },
 
       // Folders
