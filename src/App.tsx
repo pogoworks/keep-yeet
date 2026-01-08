@@ -1,5 +1,6 @@
 import { useAppStore } from "@/stores/useAppStore";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import {
   ProjectListView,
   ProjectDetailView,
@@ -27,7 +28,12 @@ function App() {
     }
   })();
 
-  return <TooltipProvider delayDuration={300}>{content}</TooltipProvider>;
+  return (
+    <TooltipProvider delayDuration={300}>
+      {content}
+      <Toaster />
+    </TooltipProvider>
+  );
 }
 
 export default App;

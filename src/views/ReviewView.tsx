@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   DndContext,
   DragEndEvent,
@@ -142,7 +143,7 @@ export function ReviewView() {
       await refreshProjectStats();
     } catch (error) {
       console.error("Failed to execute triage:", error);
-      // TODO: Show error toast/dialog
+      toast.error("Failed to execute triage");
     } finally {
       setIsAccepting(false);
     }

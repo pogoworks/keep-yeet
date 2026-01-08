@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ export function CreateProjectDialog({
       }
     } catch (err) {
       console.error("Failed to pick location:", err);
+      toast.error("Failed to pick location");
     }
   }
 

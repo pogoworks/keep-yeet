@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,7 @@ export function ProjectDetailView() {
       await refreshProjectStats();
     } catch (err) {
       console.error("Failed to refresh project stats:", err);
+      toast.error("Failed to refresh project stats");
     }
   }
 

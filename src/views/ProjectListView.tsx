@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppStore } from "@/stores/useAppStore";
@@ -50,6 +51,7 @@ export function ProjectListView() {
       await loadProjects();
     } catch (err) {
       console.error("Failed to delete project:", err);
+      toast.error("Failed to delete project");
     } finally {
       setDeletingId(null);
     }
@@ -61,6 +63,7 @@ export function ProjectListView() {
       await loadProjects();
     } catch (err) {
       console.error("Failed to reload projects:", err);
+      toast.error("Failed to reload projects");
     }
   }
 
