@@ -21,7 +21,6 @@ import { FolderPlus } from "@/components/ui/pixel-icon";
  */
 export function ProjectDetailView() {
   const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
 
   const currentProject = useAppStore((state) => state.currentProject);
   const currentProjectPath = useAppStore((state) => state.currentProjectPath);
@@ -30,6 +29,11 @@ export function ProjectDetailView() {
   const refreshProjectStats = useAppStore((state) => state.refreshProjectStats);
   const selectFolder = useAppStore((state) => state.selectFolder);
   const startTriage = useAppStore((state) => state.startTriage);
+
+  // Initialize activeTab from currentFolder (avoids animation flash when returning from triage)
+  const [activeTab, setActiveTab] = useState(() =>
+    currentFolder ? currentFolder.id : "overview"
+  );
 
   // Sync activeTab with currentFolder (e.g., when returning from triage)
   useEffect(() => {
